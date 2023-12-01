@@ -29,7 +29,7 @@ Mappings:
       amiId: ami-090fa75af13c156b4
 Resources:
   vhpVPC:
-    !indlude: /resources/testing.yml
+    !include: /resources/testing.yml
   publicSubnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -221,7 +221,7 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref testLaunchTemplate
         Version: !GetAtt testLaunchTemplate.DefaultVersionNumber
-      SubnetId: !Ref publicSubnet              
+      SubnetId: !Ref publicSubnet
 
 Outputs:
   testlaunchTemplateId:
