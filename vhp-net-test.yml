@@ -29,7 +29,15 @@ Mappings:
       amiId: ami-090fa75af13c156b4
 Resources:
   vhpVPC:
-    !include: /resources/testing.yml
+      Type: 'AWS::EC2::VPC'
+      Properties:
+        CidrBlock: 10.0.0.0/16
+        Tags:
+          - Key: Name
+            Value: !Sub '${environment}-vpc'
+      Metadata:
+        'AWS::CloudFormation::Designer':
+          id: 50ec779e-ddb4-46fc-af41-7605dfad7e39
   publicSubnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
