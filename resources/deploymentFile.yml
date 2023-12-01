@@ -1,0 +1,5 @@
+template-file-path: vhp-net-test.yml
+parameters:
+  testAMIid: ami-057ccb05d2acc8c3d
+  keypairName: christian-key
+tags: {}
