@@ -1,0 +1,362 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create a demo launch template
+Parameters:
+  testAMIid:
+    Type: 'AWS::EC2::Image::Id'
+  keypairName:
+    Description: EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+  instanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+  environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+Mappings:
+  amiMap:
+    ca-central-1:
+      amiId: ami-041a9937e9118f3f3
+    us-east-1:
+      amiId: ami-090fa75af13c156b4
+Resources:
+  vhpVPC:
+    !indlude: /resources/testing.yml
+  publicSubnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref vhpVPC
+      AvailabilityZone: us-east-2a
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${environment}-publicSubnet'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 6e673b4f-cecc-4f00-8e94-785d54df659c
+    DependsOn:
+      - vhpVPC
+  privateSubnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref vhpVPC
+      AvailabilityZone: us-east-2a
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${environment}-privateSubnet'
+    DependsOn:
+      - vhpVPC
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: ddc0ad95-6ad8-4774-bcd2-6eb5506a7770
+  vhpInternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${environment}-publicInternetGateway'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: ab02b05e-ac95-4c24-a3bc-d822c8dce62a
+  GatewayToInternet:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref vhpInternetGateway
+      VpcId: !Ref vhpVPC
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fd0759ac-f317-494a-8f6e-9fbb13d150aa
+  publicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref vhpVPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${environment}-publicRouteTable'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: b453e08f-c160-469c-9f03-006c17cf36ea
+  publicRoute:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref publicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref vhpInternetGateway
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 71cdcd19-ab5c-4da7-921a-2c938d545246
+    DependsOn:
+      - GatewayToInternet
+  publicSubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref publicSubnet
+      RouteTableId: !Ref publicRouteTable
+
+  instanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: IAM role used for our Launch template demo session
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+      Tags:
+        - Key: environment
+          Value: !Ref environment
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: a2bc52ed-9b30-4625-8f47-e479d2dea29a
+  instanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    DependsOn:
+      - instanceRole
+    Properties:
+      Roles:
+        - !Ref instanceRole
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: e695a0dd-4cc6-4cc5-8710-cbfea17d1d31
+
+  testSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: allows HTTP and HTTPs traffic from the internet
+      GroupName: !Sub '${environment}-pp-sg'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIpv6: '::/0'
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIpv6: '::/0'
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 68.185.107.66/32
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref vhpVPC
+      Tags:
+        - Key: environment
+          Value: !Ref environment
+        - Key: Name
+          Value: !Sub '${environment}-pp-sg'
+
+  testLaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
+    DependsOn:
+      - instanceProfile
+      - testSecurityGroup
+    Properties:
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              DeleteOnTermination: true
+              Encrypted: true
+              Iops: 3000
+              Throughput: 125
+              VolumeSize: 8
+              VolumeType: gp3
+        EbsOptimized: true
+        IamInstanceProfile:
+          Arn: !GetAtt instanceProfile.Arn
+        KeyName: !Ref keypairName
+        UserData: !Base64 '80'
+        ImageId: testAMIid
+        InstanceType: !Ref instanceType
+        MetadataOptions:
+          HttpTokens: required
+        Monitoring:
+          Enabled: true
+        SecurityGroupIds:
+          - !GetAtt testSecurityGroup.GroupId
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: !Sub '${environment}-vhp-pp'
+              - Key: environment
+                Value: !Ref environment
+      TagSpecifications:
+        - ResourceType: launch-template
+          Tags:
+            - Key: environment
+              Value: !Ref environment
+  testEC2instance:
+    Type: 'AWS::EC2::Instance'
+    DependsOn:
+      - testLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref testLaunchTemplate
+        Version: !GetAtt testLaunchTemplate.DefaultVersionNumber
+      SubnetId: !Ref publicSubnet              
+
+Outputs:
+  testlaunchTemplateId:
+    Value: !Ref testLaunchTemplate
+    Export:
+      Name: !Sub '${environment}-pp-lt-id'
+Metadata:
+  'AWS::CloudFormation::Designer':
+    b350e638-e90e-4208-9216-112745c46382:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 590
+        'y': 330
+      z: 1
+      embeds: []
+      iscontainedinside:
+        - 50ec779e-ddb4-46fc-af41-7605dfad7e39
+    a2bc52ed-9b30-4625-8f47-e479d2dea29a:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 490
+        'y': 150
+      z: 1
+      embeds: []
+    e695a0dd-4cc6-4cc5-8710-cbfea17d1d31:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 590
+        'y': 150
+      z: 1
+      embeds: []
+    b7f3b730-92cb-4fff-b090-12059d4044bc:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 590
+        'y': 240
+      z: 1
+      embeds: []
+    4e6cbe1c-308a-4524-ac76-80d58285d6cd:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 690
+        'y': 240
+      z: 1
+      embeds: []
+      iscontainedinside:
+        - 6e673b4f-cecc-4f00-8e94-785d54df659c
+    ab02b05e-ac95-4c24-a3bc-d822c8dce62a:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 1100
+        'y': 620
+      z: 1
+      embeds: []
+    50ec779e-ddb4-46fc-af41-7605dfad7e39:
+      size:
+        width: 150
+        height: 150
+      position:
+        x: 1050
+        'y': 400
+      z: 1
+      embeds: []
+    5202e4d2-2a33-4af7-ba08-62b5bf901ca2:
+      size:
+        width: 150
+        height: 150
+      position:
+        x: 1300
+        'y': 400
+      z: 1
+      embeds: []
+    b453e08f-c160-469c-9f03-006c17cf36ea:
+      size:
+        width: 150
+        height: 150
+      position:
+        x: 810
+        'y': 400
+      z: 1
+      embeds: []
+    fd0759ac-f317-494a-8f6e-9fbb13d150aa:
+      source:
+        id: ab02b05e-ac95-4c24-a3bc-d822c8dce62a
+      target:
+        id: 50ec779e-ddb4-46fc-af41-7605dfad7e39
+    07f99466-a8da-427e-b252-50728d882b26:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 1350
+        'y': 620
+      z: 1
+      embeds: []
+      dependson:
+        - fd0759ac-f317-494a-8f6e-9fbb13d150aa
+    71cdcd19-ab5c-4da7-921a-2c938d545246:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 860
+        'y': 620
+      z: 1
+      embeds: []
+      dependson:
+        - fd0759ac-f317-494a-8f6e-9fbb13d150aa
+    ddc0ad95-6ad8-4774-bcd2-6eb5506a7770:
+      size:
+        width: 150
+        height: 150
+      position:
+        x: 1310
+        'y': 210
+      z: 1
+      embeds: []
+    6e673b4f-cecc-4f00-8e94-785d54df659c:
+      size:
+        width: 150
+        height: 150
+      position:
+        x: 800
+        'y': 200
+      z: 1
+      embeds: []

@@ -51,7 +51,9 @@ Mappings:
       martAmiId: ami-051f438fa2e21daba
       servicesAmiId: ami-0d14968c49ced30f4
 Resources:
+  !include:/resources/privateSubNet.yml
   vhpVPC:
+
     Type: 'AWS::EC2::VPC'
     Properties:
       CidrBlock: 10.0.0.0/16
