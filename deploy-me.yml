@@ -1,3 +1,5 @@
 template-file-path: ./vhp-net-test.yml
-parameters: {}
+parameters: {
+    id: name
+    }
 tags: {}
