@@ -1,0 +1,2 @@
+file: 4
+other: !include ./resources/test2.yml
