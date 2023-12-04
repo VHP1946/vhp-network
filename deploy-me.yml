@@ -1,11 +1,6 @@
-template-file-path: ./vhp-network-launch.yml
-parameters: 
-    image: public.ecr.aws/lts/nginx:latest
-    task_size: x-small
-    max_capacity: 5
-    port: 8080
-    env: production
-tags:
-    cost-center: '123456'
-    org: 'AWS'
-
+template-file-path: vhp-network-launch.yml
+parameters:
+  environment: dev
+  keypairName: christian-key
+  instanceType: t2.micro
+tags: {}
