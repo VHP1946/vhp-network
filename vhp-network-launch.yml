@@ -44,7 +44,7 @@ Mappings:
       martAmiId: ami-018f5ccfff4fbb51d
       servicesAmiId: ami-018f5ccfff4fbb51d
     us-east-2:
-      bastionHostAmiId: ami-0453709da2dd5b087 
+      bastionHostAmiId: ami-0453709da2dd5b087
       ppAmiId: ami-036538d509a244cf1
       webserverAmiId: ami-057ccb05d2acc8c3d
       coreAmiId: ami-03127faf27ba03011

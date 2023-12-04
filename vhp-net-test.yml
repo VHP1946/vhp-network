@@ -201,8 +201,8 @@ Resources:
           Arn: !GetAtt instanceProfile.Arn
         KeyName: !Ref keypairName
         UserData: !Base64 '80'
-        ImageId: testAMIid
-        InstanceType: !Ref instanceType
+        ImageId: ami-0453709da2dd5b087
+        InstanceType: t2.micro
         MetadataOptions:
           HttpTokens: required
         Monitoring:
@@ -213,7 +213,7 @@ Resources:
           - ResourceType: instance
             Tags:
               - Key: Name
-                Value: !Sub '${environment}-vhp-pp'
+                Value: !Sub '${environment}-vhp-test-ec2'
               - Key: environment
                 Value: !Ref environment
       TagSpecifications:
@@ -235,7 +235,7 @@ Outputs:
   testlaunchTemplateId:
     Value: !Ref testLaunchTemplate
     Export:
-      Name: !Sub '${environment}-pp-lt-id'
+      Name: !Sub '${environment}-test-lt-id'
 Metadata:
   'AWS::CloudFormation::Designer':
     b350e638-e90e-4208-9216-112745c46382:

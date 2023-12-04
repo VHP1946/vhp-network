@@ -1,5 +1,51 @@
 template-file-path: ./vhp-net-test.yml
-parameters: {
-    id: name
-    }
-tags: {}
+parameters:
+#  webserverAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+#  coreAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+#  martAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+#  servicesAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+#  ppAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+
+#  webserverEIP:
+#    Description: Attach the static elastic IP Allocation ID
+#    Type: String
+
+  keypairName:
+    Description: EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+  instanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+  environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+Mappings:
+  amiMap:
+    us-east-1:
+      bastionHostAmiId: ami-0453709da2dd5b087 
+      ppAmiId: ami-018f5ccfff4fbb51d
+      webserverAmiId: ami-018f5ccfff4fbb51d
+      coreAmiId: ami-018f5ccfff4fbb51d
+      martAmiId: ami-018f5ccfff4fbb51d
+      servicesAmiId: ami-018f5ccfff4fbb51d
+    us-east-2:
+      bastionHostAmiId: ami-0453709da2dd5b087 
+      ppAmiId: ami-036538d509a244cf1
+      webserverAmiId: ami-057ccb05d2acc8c3d
+      coreAmiId: ami-03127faf27ba03011
+      martAmiId: ami-051f438fa2e21daba
+      servicesAmiId: ami-0d14968c49ced30f4
