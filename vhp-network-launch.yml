@@ -16,8 +16,9 @@ Parameters:
 #    Description: Attach the static elastic IP Allocation ID
 #    Type: String
 
-#  keypairName:
-#    Description: EC2 KeyPair to enable SSH access to the instance
+  keypairName:
+    Description: EC2 KeyPair to enable SSH access to the instance
+    Type: String
 #    Type: 'AWS::EC2::KeyPair::KeyName'
   instanceType:
     Type: String
@@ -261,7 +262,7 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt instanceProfile.Arn
-        KeyName: "christian-key"
+        KeyName: !Ref keypairName
         UserData: !Base64 '80'
         ImageId: !FindInMap 
           - amiMap
@@ -303,7 +304,7 @@ Resources:
   ppSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     DependsOn:
-      - vhpVPC
+      - bastionHostSecurityGroup
     Properties:
       GroupDescription: allows HTTP and HTTPs traffic from the internet
       GroupName: !Sub '${environment}-pp-sg'
@@ -357,7 +358,7 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt instanceProfile.Arn
-        KeyName: "christian-key"
+        KeyName: !Ref keypairName
         UserData: !Base64 '80'
         ImageId: !FindInMap 
           - amiMap
@@ -500,7 +501,7 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt instanceProfile.Arn
-        KeyName: "christian-key"
+        KeyName: !Ref keypairName
         UserData: !Base64 '80'
         ImageId: !FindInMap 
           - amiMap
@@ -652,7 +653,7 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt instanceProfile.Arn
-        KeyName: "christian-key"
+        KeyName: !Ref keypairName
         UserData: !Base64 '80'
         ImageId: !FindInMap 
           - amiMap
@@ -781,7 +782,7 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt instanceProfile.Arn
-        KeyName: "christian-key"
+        KeyName: !Ref keypairName
         UserData: !Base64 '80'
         ImageId: !FindInMap 
           - amiMap
@@ -914,7 +915,7 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt instanceProfile.Arn
-        KeyName: "christian-key"
+        KeyName: !Ref keypairName
         UserData: !Base64 '80'
         ImageId: !FindInMap 
           - amiMap
