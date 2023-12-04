@@ -1,0 +1,5 @@
+#  webserverEIPassociation:
+#    Type: AWS::EC2::EIPAssociation
+#    Properties:
+#      AllocationId: webserverEIP
+#      InstanceId: webserverEC2Instance

@@ -1,0 +1,40 @@
+  webserverCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn:
+      - webserverEC2Instance
+    Properties:
+      AlarmDescription: CPU alarm for my instance
+      AlarmActions:
+      - Ref: "devEmailsTopic"
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '60'
+      EvaluationPeriods: '3'
+      Threshold: '80'
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+      - Name: InstanceId
+        Value:
+          Ref: "webserverEC2Instance"
+
+  webserverStatusCheckFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn:
+      - webserverEC2Instance
+    Properties:
+      AlarmDescription: Send an email when instance status check fails for 15
+        consecutive minutes.
+      Namespace: AWS/EC2
+      MetricName: StatusCheckFailed_System
+      Statistic: Minimum
+      Period: '60'
+      EvaluationPeriods: '15'
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: '0'
+      AlarmActions:
+      - Ref: "devEmailsTopic"
+      Dimensions:
+      - Name: InstanceId
+        Value:
+          Ref: webserverEC2Instance

@@ -1,5 +1,0 @@
-template-file-path: ./vhp-net-test.yml
-parameters: {
-    id: name
-    }
-tags: {}

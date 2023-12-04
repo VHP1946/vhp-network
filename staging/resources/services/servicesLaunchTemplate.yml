@@ -1,0 +1,58 @@
+  servicesLaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
+    DependsOn:
+      - instanceProfile
+      - servicesSecurityGroup
+    Properties:
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              DeleteOnTermination: true
+              Encrypted: true
+              Iops: 3000
+              Throughput: 125
+              VolumeSize: 8
+              VolumeType: gp3
+        EbsOptimized: true
+        IamInstanceProfile:
+          Arn: !GetAtt instanceProfile.Arn
+        KeyName: !Ref keypairName
+        UserData: !Base64 '80'
+        ImageId: !FindInMap 
+          - amiMap
+          - !Ref 'AWS::Region'
+          - servicesAmiId
+        #ImageId: ami-0d14968c49ced30f4
+        InstanceType: !Ref instanceType
+        NetworkInterfaces:
+        - DeviceIndex: 0
+          PrivateIpAddress: 10.0.2.157
+          SubnetId: !Ref privateSubnet
+          Groups:
+            - !Ref servicesSecurityGroup
+          AssociatePublicIpAddress: false
+        MetadataOptions:
+          HttpTokens: required
+        Monitoring:
+          Enabled: true
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: !Sub '${environment}-vhp-services'
+              - Key: environment
+                Value: !Ref environment
+      TagSpecifications:
+        - ResourceType: launch-template
+          Tags:
+            - Key: environment
+              Value: !Ref environment
+  servicesEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    DependsOn:
+      - servicesLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref servicesLaunchTemplate
+        Version: !GetAtt servicesLaunchTemplate.DefaultVersionNumber

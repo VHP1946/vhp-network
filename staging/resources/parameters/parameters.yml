@@ -1,0 +1,34 @@
+Parameters:
+#  webserverAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+#  coreAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+#  martAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+#  servicesAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+#  ppAMIid:
+#    Type: 'AWS::EC2::Image::Id'
+
+#  webserverEIP:
+#    Description: Attach the static elastic IP Allocation ID
+#    Type: String
+
+  keypairName:
+    Description: EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+  instanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+  environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
