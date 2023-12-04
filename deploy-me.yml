@@ -1,4 +1,4 @@
-template-file-path: ./vhp-net-test.yml
+template-file-path: ./vhp-network-launch.yml
 parameters: 
     image: public.ecr.aws/lts/nginx:latest
     task_size: x-small
