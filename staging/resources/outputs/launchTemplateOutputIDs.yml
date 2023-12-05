@@ -1,4 +1,4 @@
-Outputs:
+
   webserverlaunchTemplateId:
     Value: !Ref webserverLaunchTemplate
     Export:

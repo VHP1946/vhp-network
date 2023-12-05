@@ -1,4 +1,4 @@
-  webserverSecurityGroup:
+
     Type: 'AWS::EC2::SecurityGroup'
     DependsOn:
       - ppSecurityGroup

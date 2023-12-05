@@ -1,4 +1,4 @@
-  instanceProfile:
+
     Type: 'AWS::IAM::InstanceProfile'
     DependsOn:
       - instanceRole

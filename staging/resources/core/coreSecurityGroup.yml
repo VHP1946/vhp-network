@@ -1,4 +1,4 @@
-  coreSecurityGroup:
+
     Type: 'AWS::EC2::SecurityGroup'
     DependsOn:
       - webserverSecurityGroup

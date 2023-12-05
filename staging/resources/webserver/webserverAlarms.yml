@@ -1,4 +1,4 @@
-  webserverCPUAlarm:
+
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - webserverEC2Instance

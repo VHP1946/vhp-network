@@ -1,4 +1,4 @@
-  ppCPUAlarm:
+
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - ppEC2Instance

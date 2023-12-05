@@ -1,4 +1,4 @@
-Mappings:
+
   amiMap:
     us-east-1:
       bastionHostAmiId: ami-0453709da2dd5b087

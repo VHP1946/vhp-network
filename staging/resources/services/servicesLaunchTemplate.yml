@@ -1,4 +1,4 @@
-  servicesLaunchTemplate:
+
     Type: 'AWS::EC2::LaunchTemplate'
     DependsOn:
       - instanceProfile

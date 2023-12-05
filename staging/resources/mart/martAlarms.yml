@@ -1,4 +1,4 @@
-  martCPUAlarm:
+
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - martEC2Instance

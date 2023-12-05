@@ -1,4 +1,4 @@
-  ppSecurityGroup:
+
     Type: 'AWS::EC2::SecurityGroup'
     DependsOn:
       - vhpVPC

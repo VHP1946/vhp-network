@@ -1,4 +1,4 @@
-  martSecurityGroup:
+
     Type: 'AWS::EC2::SecurityGroup'
     DependsOn:
       - coreSecurityGroup

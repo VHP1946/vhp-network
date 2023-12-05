@@ -1,4 +1,4 @@
-  servicesCPUAlarm:
+
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - servicesEC2Instance

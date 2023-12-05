@@ -1,4 +1,4 @@
-  privateSubnet:
+
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref vhpVPC
@@ -37,9 +37,6 @@
       Tags:
         - Key: Name
           Value: !Sub '${environment}-privateRouteTable'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 5202e4d2-2a33-4af7-ba08-62b5bf901ca2
   privateRoute:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -48,9 +45,6 @@
       NatGatewayId: !Ref vhpNatGateway # this will eventually be a NAT gateway
     DependsOn:
       - GatewayToInternet
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 07f99466-a8da-427e-b252-50728d882b26
   privateSubnetRouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
