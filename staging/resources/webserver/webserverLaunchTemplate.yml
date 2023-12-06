@@ -19,7 +19,7 @@
           Arn: !GetAtt instanceProfile.Arn
         KeyName: !Ref keypairName
         UserData: !Base64 '80'
-        ImageId: !FindInMap 
+        ImageId: !FindInMap
           - amiMap
           - !Ref 'AWS::Region'
           - webserverAmiId
@@ -28,7 +28,7 @@
         NetworkInterfaces:
         - DeviceIndex: 0
           PrivateIpAddress: 10.0.1.212
-          SubnetId: !Ref publicSubnet 
+          SubnetId: !Ref publicSubnet
           Groups:
             - !Ref webserverSecurityGroup
         MetadataOptions:
@@ -47,11 +47,3 @@
           Tags:
             - Key: environment
               Value: !Ref environment
-  webserverEC2Instance:
-    Type: 'AWS::EC2::Instance'
-    DependsOn:
-      - webserverLaunchTemplate
-    Properties:
-      LaunchTemplate:
-        LaunchTemplateId: !Ref webserverLaunchTemplate
-        Version: !GetAtt webserverLaunchTemplate.DefaultVersionNumber

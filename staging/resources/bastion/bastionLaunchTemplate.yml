@@ -19,7 +19,7 @@
           Arn: !GetAtt instanceProfile.Arn
         KeyName: !Ref keypairName
         UserData: !Base64 '80'
-        ImageId: !FindInMap 
+        ImageId: !FindInMap
           - amiMap
           - !Ref 'AWS::Region'
           - bastionHostAmiId
@@ -47,11 +47,3 @@
           Tags:
             - Key: environment
               Value: !Ref environment
-  bastionHostEC2:
-    Type: 'AWS::EC2::Instance'
-    DependsOn:
-      - bastionHostLaunchTemplate
-    Properties:
-      LaunchTemplate:
-        LaunchTemplateId: !Ref bastionHostLaunchTemplate
-        Version: !GetAtt bastionHostLaunchTemplate.DefaultVersionNumber

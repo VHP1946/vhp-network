@@ -19,7 +19,7 @@
           Arn: !GetAtt instanceProfile.Arn
         KeyName: !Ref keypairName
         UserData: !Base64 '80'
-        ImageId: !FindInMap 
+        ImageId: !FindInMap
           - amiMap
           - !Ref 'AWS::Region'
           - martAmiId
@@ -48,11 +48,3 @@
           Tags:
             - Key: environment
               Value: !Ref environment
-  martEC2Instance:
-    Type: 'AWS::EC2::Instance'
-    DependsOn:
-      - martLaunchTemplate
-    Properties:
-      LaunchTemplate:
-        LaunchTemplateId: !Ref martLaunchTemplate
-        Version: !GetAtt martLaunchTemplate.DefaultVersionNumber

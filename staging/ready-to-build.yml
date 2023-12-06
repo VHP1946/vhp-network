@@ -1,0 +1,273 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates the VHP environment
+
+Parameters: !include ./resources/parameters/parameters.yml
+
+Mappings: !include ./resources/parameters/AMIs.yml
+
+Resources:
+vhpVPC: !include ./resources/VPC/vhpVPC.yml
+
+
+
+privateSubnet: !include ./resources/VPC/privateSubnet.yml
+
+
+## NAT GATEWAY
+vhpNatGateway:
+  Type: AWS::EC2::NatGateway
+  DependsOn: NatPublicIP
+  Properties:
+    SubnetId: !Ref publicSubnet
+    AllocationId: !GetAtt NatPublicIP.AllocationId
+    Tags:
+      - Key: Name
+        Value: !Sub '${environment}-natGateway'
+    ## ELASTIC IP
+NatPublicIP:
+  Type: AWS::EC2::EIP
+  DependsOn: vhpVPC
+  Properties:
+    Domain: vpc
+privateRouteTable:
+  Type: 'AWS::EC2::RouteTable'
+  Properties:
+    VpcId: !Ref vhpVPC
+    Tags:
+      - Key: Name
+        Value: !Sub '${environment}-privateRouteTable'
+privateRoute:
+  Type: 'AWS::EC2::Route'
+  Properties:
+    RouteTableId: !Ref privateRouteTable
+    DestinationCidrBlock: 0.0.0.0/0
+    NatGatewayId: !Ref vhpNatGateway # this will eventually be a NAT gateway
+  DependsOn:
+    - GatewayToInternet
+privateSubnetRouteTableAssociation:
+  Type: 'AWS::EC2::SubnetRouteTableAssociation'
+  Properties:
+    SubnetId: !Ref privateSubnet
+    RouteTableId: !Ref privateRouteTable
+
+publicSubnet: !include ./resources/VPC/publicSubnet.yml
+
+vhpInternetGateway:
+  Type: 'AWS::EC2::InternetGateway'
+  Properties:
+    Tags:
+      - Key: Name
+        Value: !Sub '${environment}-publicInternetGateway'
+GatewayToInternet:
+  Type: 'AWS::EC2::VPCGatewayAttachment'
+  Properties:
+    InternetGatewayId: !Ref vhpInternetGateway
+    VpcId: !Ref vhpVPC
+
+publicRouteTable:
+  Type: 'AWS::EC2::RouteTable'
+  Properties:
+    VpcId: !Ref vhpVPC
+    Tags:
+      - Key: Name
+        Value: !Sub '${environment}-publicRouteTable'
+publicRoute:
+  Type: 'AWS::EC2::Route'
+  Properties:
+    RouteTableId: !Ref publicRouteTable
+    DestinationCidrBlock: 0.0.0.0/0
+    GatewayId: !Ref vhpInternetGateway
+  DependsOn:
+    - GatewayToInternet
+publicSubnetRouteTableAssociation:
+  Type: 'AWS::EC2::SubnetRouteTableAssociation'
+  Properties:
+    SubnetId: !Ref publicSubnet
+    RouteTableId: !Ref publicRouteTable
+
+elasticIP: !include ./resources/VPC/elasticIP.yml
+
+instanceRole: !include ./resources/IAM/instanceRole.yml
+instanceProfile: !include ./resources/IAM/instanceProfile.yml
+
+devEmailsTopic: !include ./resources/SNS/emailsTopic.yml
+
+bastionHostSecurityGroup: !include ./resources/bastion/bastionSecurityGroup.yml
+bastionHostLaunchTemplate: !include ./resources/bastion/bastionLaunchTemplate.yml
+bastionHostEC2:
+  Type: 'AWS::EC2::Instance'
+  DependsOn:
+    - bastionHostLaunchTemplate
+  Properties:
+  LaunchTemplate:
+  LaunchTemplateId: Ref bastionHostLaunchTemplate #can we put the above launch template file here? !include ./resources/bastion/bastionLaunchTemplate.yml
+  Version: !GetAtt bastionHostLaunchTemplate.DefaultVersionNumber
+
+ppSecurityGroup: !include ./resources/pp/ppSecurityGroup.yml
+ppLaunchTemplate: !include ./resources/pp/ppLaunchTemplate.yml
+ppEC2Instance:
+  Type: 'AWS::EC2::Instance'
+  DependsOn:
+    - ppLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref ppLaunchTemplate #similar question to above bastion launch template
+      Version: !GetAtt ppLaunchTemplate.DefaultVersionNumber
+
+
+ppCPUAlarm.yml: !include ./resources/pp/ppAlarms.yml
+ppStatusCheckFailedAlarm:
+  Type: AWS::CloudWatch::Alarm
+  DependsOn:
+    - ppEC2Instance
+  Properties:
+    AlarmDescription: Send an email when instance status check fails for 15
+      consecutive minutes.
+    Namespace: AWS/EC2
+    MetricName: StatusCheckFailed_System
+    Statistic: Minimum
+    Period: '60'
+    EvaluationPeriods: '15'
+    ComparisonOperator: GreaterThanThreshold
+    Threshold: '0'
+    AlarmActions:
+    - Ref: "devEmailsTopic"
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: ppEC2Instance
+
+webserverSecurityGroup: !include ./resources/webserver/webserverSecurityGroup.yml
+webserverLaunchTemplate: !include ./resources/webserver/webserverLaunchTemplate.yml
+webserverEC2Instance:
+  Type: 'AWS::EC2::Instance'
+  DependsOn:
+    - webserverLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref webserverLaunchTemplate
+      Version: !GetAtt webserverLaunchTemplate.DefaultVersionNumber
+
+
+webserverCPUAlarm: !include ./resources/webserver/webserverAlarms.yml
+webserverStatusCheckFailedAlarm:
+  Type: AWS::CloudWatch::Alarm
+  DependsOn:
+    - webserverEC2Instance
+  Properties:
+    AlarmDescription: Send an email when instance status check fails for 15
+      consecutive minutes.
+    Namespace: AWS/EC2
+    MetricName: StatusCheckFailed_System
+    Statistic: Minimum
+    Period: '60'
+    EvaluationPeriods: '15'
+    ComparisonOperator: GreaterThanThreshold
+    Threshold: '0'
+    AlarmActions:
+    - Ref: "devEmailsTopic"
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: webserverEC2Instance
+
+coreSecurityGroup: !include ./resources/core/coreSecurityGroup.yml
+coreLaunchTemplate: !include ./resources/core/coreLaunchTemplate.yml
+coreEC2Instance:
+  Type: 'AWS::EC2::Instance'
+  DependsOn:
+    - coreLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref coreLaunchTemplate
+      Version: !GetAtt coreLaunchTemplate.DefaultVersionNumber
+
+coreCPUAlarm: !include ./resources/core/coreAlarms.yml
+coreStatusCheckFailedAlarm:
+  Type: AWS::CloudWatch::Alarm
+  DependsOn:
+    - coreEC2Instance
+  Properties:
+    AlarmDescription: Send an email when instance status check fails for 15
+      consecutive minutes.
+    Namespace: AWS/EC2
+    MetricName: StatusCheckFailed_System
+    Statistic: Minimum
+    Period: '60'
+    EvaluationPeriods: '15'
+    ComparisonOperator: GreaterThanThreshold
+    Threshold: '0'
+    AlarmActions:
+    - Ref: "devEmailsTopic"
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: coreEC2Instance
+
+martSecurityGroup: !include ./resources/mart/martSecurityGroup.yml
+martLaunchTemplate: !include ./resources/mart/martLaunchTemplate.yml
+martEC2Instance:
+  Type: 'AWS::EC2::Instance'
+  DependsOn:
+    - martLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref martLaunchTemplate
+      Version: !GetAtt martLaunchTemplate.DefaultVersionNumber
+
+martCPUAlarm: !include ./resources/mart/martAlarms.yml
+martStatusCheckFailedAlarm:
+  Type: AWS::CloudWatch::Alarm
+  DependsOn:
+    - martEC2Instance
+  Properties:
+    AlarmDescription: Send an email when instance status check fails for 15
+      consecutive minutes.
+    Namespace: AWS/EC2
+    MetricName: StatusCheckFailed_System
+    Statistic: Minimum
+    Period: '60'
+    EvaluationPeriods: '15'
+    ComparisonOperator: GreaterThanThreshold
+    Threshold: '0'
+    AlarmActions:
+    - Ref: "devEmailsTopic"
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: martEC2Instance   
+
+servicesSecurityGroup: !include ./resources/services/servicesSecurityGroup.yml
+servicesLaunchTemplate: !include ./resources/services/servicesLaunchTemplate.yml
+servicesEC2Instance:
+  Type: 'AWS::EC2::Instance'
+  DependsOn:
+    - servicesLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref servicesLaunchTemplate
+      Version: !GetAtt servicesLaunchTemplate.DefaultVersionNumber
+
+servicesCPUAlarm: !include ./resources/services/servicesAlarms.yml
+servicesStatusCheckFailedAlarm:
+  Type: AWS::CloudWatch::Alarm
+  DependsOn:
+    - servicesEC2Instance
+  Properties:
+    AlarmDescription: Send an email when instance status check fails for 15
+      consecutive minutes.
+    Namespace: AWS/EC2
+    MetricName: StatusCheckFailed_System
+    Statistic: Minimum
+    Period: '60'
+    EvaluationPeriods: '15'
+    ComparisonOperator: GreaterThanThreshold
+    Threshold: '0'
+    AlarmActions:
+    - Ref: "devEmailsTopic"
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: servicesEC2Instance
+
+Outputs: !include ./resources/outputs/launchTemplateOutputIDs.yml
