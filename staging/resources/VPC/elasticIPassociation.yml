@@ -1,7 +1,0 @@
-
-    Type: AWS::EC2::EIPAssociation
-    DependsOn:
-      - webserverEC2Instance    
-    Properties:
-      AllocationId: webserverEIP
-      InstanceId: webserverEC2Instance

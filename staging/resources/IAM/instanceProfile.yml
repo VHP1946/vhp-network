@@ -1,7 +1,0 @@
-
-    Type: 'AWS::IAM::InstanceProfile'
-    DependsOn:
-      - instanceRole
-    Properties:
-      Roles:
-        - !Ref instanceRole

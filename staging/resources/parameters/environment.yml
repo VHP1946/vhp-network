@@ -1,6 +1,0 @@
-
-    Type: String
-    Default: dev
-    AllowedValues:
-      - dev
-      - prod

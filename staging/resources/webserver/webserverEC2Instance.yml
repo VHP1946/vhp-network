@@ -1,8 +1,0 @@
-
-    Type: 'AWS::EC2::Instance'
-    DependsOn:
-      - webserverLaunchTemplate
-    Properties:
-      LaunchTemplate:
-        LaunchTemplateId: !Ref webserverLaunchTemplate
-        Version: !GetAtt webserverLaunchTemplate.DefaultVersionNumber

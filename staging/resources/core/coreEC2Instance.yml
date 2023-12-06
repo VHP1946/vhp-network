@@ -1,8 +1,0 @@
-
-    Type: 'AWS::EC2::Instance'
-    DependsOn:
-      - coreLaunchTemplate
-    Properties:
-      LaunchTemplate:
-        LaunchTemplateId: !Ref coreLaunchTemplate
-        Version: !GetAtt coreLaunchTemplate.DefaultVersionNumber
