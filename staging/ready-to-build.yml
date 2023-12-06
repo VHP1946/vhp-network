@@ -2,10 +2,10 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Creates the VHP environment
 
 Parameters:
-  keypairName: ./resources/parameters/keypairName.yml
-  instanceType: ./resources/parameters/instanceType.yml
-  environment: ./resources/parameters/environment.yml
-  #elasticIP: ./resources/parameters/elasticIP.yml
+  keypairName: !include ./resources/parameters/keypairName.yml
+  instanceType: !include ./resources/parameters/instanceType.yml
+  environment: !include ./resources/parameters/environment.yml
+  #elasticIP: !include ./resources/parameters/elasticIP.yml
 
 Mappings:
   amiMap: !include ./resources/parameters/amiMap.yml
@@ -16,58 +16,57 @@ Resources:
   publicSubnet: !include ./resources/VPC/publicSubnet.yml
   privateSubnet: !include ./resources/VPC/privateSubnet.yml
 
-  vhpInternetGateway: ./resources/VPC/vhpInternetGateway.yml
-  GatewayToInternet: ./resources/VPC/GatewayToInternet.yml
-  publicRouteTable: ./resources/VPC/publicRouteTable.yml
-  publicRoute: ./resources/VPC/publicRoute.yml
-  publicSubnetRouteTableAssociation: ./resources/VPC/publicSubnetRouteTableAssociation.yml
+  vhpInternetGateway: !include ./resources/VPC/vhpInternetGateway.yml
+  GatewayToInternet: !include ./resources/VPC/GatewayToInternet.yml
+  publicRouteTable: !include ./resources/VPC/publicRouteTable.yml
+  publicRoute: !include ./resources/VPC/publicRoute.yml
+  publicSubnetRouteTableAssociation: !include ./resources/VPC/publicSubnetRouteTableAssociation.yml
 
-  vhpNatGateway: ./resources/VPC/vhpNatGateway.yml
-  NatPublicIP: ./resources/VPC/NatPublicIP.yml
-  privateRouteTable: ./resources/VPC/privateRouteTable.yml
-  privateRoute: ./resources/VPC/privateRoute.yml
-  privateSubnetRouteTableAssociation: ./resources/VPC/privateSubnetRouteTableAssociation.yml
+  vhpNatGateway: !include ./resources/VPC/vhpNatGateway.yml
+  NatPublicIP: !include ./resources/VPC/NatPublicIP.yml
+  privateRouteTable: !include ./resources/VPC/privateRouteTable.yml
+  privateRoute: !include ./resources/VPC/privateRoute.yml
+  privateSubnetRouteTableAssociation: !include ./resources/VPC/privateSubnetRouteTableAssociation.yml
 
-  #elasticIPassociation: ./resources/VPC/elasticIPassociation.yml
+  #elasticIPassociation: !include ./resources/VPC/elasticIPassociation.yml
 
-  instanceRole: ./resources/IAM/instanceRole.yml
-  instanceProfile: ./resources/IAM/instanceProfile.yml
-  devEmailsTopic: ./resources/SNS/devEmailsTopic.yml
+  instanceRole: !include ./resources/IAM/instanceRole.yml
+  instanceProfile: !include ./resources/IAM/instanceProfile.yml
+  devEmailsTopic: !include ./resources/SNS/devEmailsTopic.yml
 
-  bastionHostSecurityGroup: ./resources/bastion/bastionHostSecurityGroup.yml
-  bastionHostLaunchTemplate: ./resources/bastion/bastionHostLaunchTemplate.yml
-  bastionHostEC2: ./resources/bastion/bastionHostEC2.yml
+  bastionHostSecurityGroup: !include ./resources/bastion/bastionSecurityGroup.yml
+  bastionHostLaunchTemplate: !include ./resources/bastion/bastionLaunchTemplate.yml
+  bastionHostEC2: !include ./resources/bastion/bastionHostEC2.yml
 
-  ppSecurityGroup: ./resources/pp/ppSecurityGroup.yml
-  ppLaunchTemplate: ./resources/pp/ppLaunchTemplate.yml
-  ppEC2Instance: ./resources/pp/ppEC2Instance.yml
-  ppCPUAlarm: ./resources/pp/ppCPUAlarm.yml
-  ppStatusCheckFailedAlarm: ./resources/pp/ppStatusCheckFailedAlarm.yml
+  ppSecurityGroup: !include ./resources/pp/ppSecurityGroup.yml
+  ppLaunchTemplate: !include ./resources/pp/ppLaunchTemplate.yml
+  ppEC2Instance: !include ./resources/pp/ppEC2Instance.yml
+  ppCPUAlarm: !include ./resources/pp/ppCPUAlarm.yml
+  ppStatusCheckFailedAlarm: !include ./resources/pp/ppStatusCheckFailedAlarm.yml
 
-  webserverSecurityGroup: ./resources/webserver/webserverSecurityGroup.yml
-  webserverLaunchTemplate: ./resources/webserver/webserverLaunchTemplate.yml
-  webserverEC2Instance: ./resources/webserver/webserverEC2Instance.yml
-  webserverCPUAlarm: ./resources/webserver/webserverCPUAlarm.yml
-  webserverStatusCheckFailedAlarm: ./resources/webserver/webserverStatusCheckFailedAlarm.yml
+  webserverSecurityGroup: !include ./resources/webserver/webserverSecurityGroup.yml
+  webserverLaunchTemplate: !include ./resources/webserver/webserverLaunchTemplate.yml
+  webserverEC2Instance: !include ./resources/webserver/webserverEC2Instance.yml
+  webserverCPUAlarm: !include ./resources/webserver/webserverCPUAlarm.yml
+  webserverStatusCheckFailedAlarm: !include ./resources/webserver/webserverStatusCheckFailedAlarm.yml
 
-  coreSecurityGroup: ./resources/core/coreSecurityGroup.yml
-  coreLaunchTemplate: ./resources/core/coreLaunchTemplate.yml
-  coreEC2Instance: ./resources/core/coreEC2Instance.yml
-  coreCPUAlarm: ./resources/core/coreCPUAlarm.yml
-  coreStatusCheckFailedAlarm: ./resources/core/coreStatusCheckFailedAlarm.yml
+  coreSecurityGroup: !include ./resources/core/coreSecurityGroup.yml
+  coreLaunchTemplate: !include ./resources/core/coreLaunchTemplate.yml
+  coreEC2Instance: !include ./resources/core/coreEC2Instance.yml
+  coreCPUAlarm: !include ./resources/core/coreCPUAlarm.yml
+  coreStatusCheckFailedAlarm: !include ./resources/core/coreStatusCheckFailedAlarm.yml
 
-  martSecurityGroup: ./resources/mart/martSecurityGroup.yml
-  martLaunchTemplate: ./resources/mart/martLaunchTemplate.yml
-  martEC2Instance: ./resources/mart/martEC2Instance.yml
-  martCPUAlarm: ./resources/mart/martCPUAlarm.yml
-  martStatusCheckFailedAlarm: ./resources/mart/martStatusCheckFailedAlarm.yml
+  martSecurityGroup: !include ./resources/mart/martSecurityGroup.yml
+  martLaunchTemplate: !include ./resources/mart/martLaunchTemplate.yml
+  martEC2Instance: !include ./resources/mart/martEC2Instance.yml
+  martCPUAlarm: !include ./resources/mart/martCPUAlarm.yml
+  martStatusCheckFailedAlarm: !include ./resources/mart/martStatusCheckFailedAlarm.yml
 
-  servicesSecurityGroup: ./resources/services/servicesSecurityGroup.yml
-  servicesLaunchTemplate: ./resources/services/servicesLaunchTemplate.yml
-  servicesEC2Instance: ./resources/services/servicesEC2Instance.yml
-  servicesCPUAlarm: ./resources/services/servicesCPUAlarm.yml
-  servicesStatusCheckFailedAlarm: ./resources/services/servicesStatusCheckFailedAlarm.yml
+  servicesSecurityGroup: !include ./resources/services/servicesSecurityGroup.yml
+  servicesLaunchTemplate: !include ./resources/services/servicesLaunchTemplate.yml
+  servicesEC2Instance: !include ./resources/services/servicesEC2Instance.yml
+  servicesCPUAlarm: !include ./resources/services/servicesCPUAlarm.yml
+  servicesStatusCheckFailedAlarm: !include ./resources/services/servicesStatusCheckFailedAlarm.yml
   
-Outputs:
-  launchTemplateOutputIDs: ./resources/outputs/launchTemplateOutputIDs.yml
+Outputs: !include ./resources/outputs/launchTemplateOutputIDs.yml
 
