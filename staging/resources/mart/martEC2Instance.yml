@@ -1,0 +1,8 @@
+
+    Type: 'AWS::EC2::Instance'
+    DependsOn:
+      - martLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref martLaunchTemplate
+        Version: !GetAtt martLaunchTemplate.DefaultVersionNumber

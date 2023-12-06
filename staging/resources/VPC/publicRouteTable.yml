@@ -1,0 +1,7 @@
+
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref vhpVPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${environment}-publicRouteTable'

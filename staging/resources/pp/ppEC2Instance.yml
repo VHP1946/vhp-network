@@ -1,0 +1,8 @@
+
+    Type: 'AWS::EC2::Instance'
+    DependsOn:
+      - ppLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref ppLaunchTemplate
+        Version: !GetAtt ppLaunchTemplate.DefaultVersionNumber

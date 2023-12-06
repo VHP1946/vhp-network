@@ -1,0 +1,8 @@
+
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref privateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref vhpNatGateway # this will eventually be a NAT gateway
+    DependsOn:
+      - GatewayToInternet

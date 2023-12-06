@@ -1,5 +1,4 @@
 
-  amiMap:
     us-east-1:
       bastionHostAmiId: ami-0453709da2dd5b087
       ppAmiId: ami-018f5ccfff4fbb51d

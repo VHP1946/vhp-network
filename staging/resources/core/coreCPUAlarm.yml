@@ -1,3 +1,4 @@
+
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - coreEC2Instance

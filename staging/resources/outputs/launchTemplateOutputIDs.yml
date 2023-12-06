@@ -19,3 +19,7 @@
     Value: !Ref ppLaunchTemplate
     Export:
       Name: !Sub '${environment}-pp-lt-id'
+  bastionHostlaunchTemplateId:
+    Value: !Ref bastionHostLaunchTemplate
+    Export:
+      Name: !Sub '${environment}-bastion-host-lt-id'
