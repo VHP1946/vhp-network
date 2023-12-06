@@ -1,7 +1,7 @@
 template-file-path: ./vhp-net-test.yml
 parameters: 
   testAMIid: ami-036538d509a244cf1 #insert whatever instance AMI you'd like to test
-  keypairName: christian-key
+  keypairName: "christian-key"
   instanceType: t2.micro
   environment: dev
 tags: {}
