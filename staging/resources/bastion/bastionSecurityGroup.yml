@@ -1,0 +1,25 @@
+
+    Type: 'AWS::EC2::SecurityGroup'
+    DependsOn:
+      - vhpVPC
+    Properties:
+      GroupDescription: allows ssh from the bastion host to the private instances
+      GroupName: !Sub '${environment}-bastion-host-sg'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3434
+          ToPort: 3437
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 68.185.107.66/32
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref vhpVPC
+      Tags:
+        - Key: environment
+          Value: !Ref environment
+        - Key: Name
+          Value: !Sub '${environment}-bastion-host-sg'

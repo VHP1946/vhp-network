@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates the VHP environment
+
+Parameters: !include ./resources/parameters/parameters.yml
+
+Mappings: !include ./resources/parameters/AMIs.yml
+
+Resources:
+vhpVPC: !include ./resources/VPC/vhpVPC.yml
+
+publicSubnet: !include ./resources/VPC/publicSubnet.yml
+privateSubnet: !include ./resources/VPC/privateSubnet.yml
+
+elasticIP: !include ./resources/VPC/elasticIP.yml
+
+instanceRole: !include ./resources/IAM/instanceRole.yml
+instanceProfile: !include ./resources/IAM/instanceProfile.yml
+
+devEmailsTopic: !include ./resources/SNS/emailsTopic.yml
+
+bastionHostSecurityGroup: !include ./resources/bastion/bastionSecurityGroup.yml
+bastionHostLaunchTemplate: !include ./resources/bastion/bastionLaunchTemplate.yml
+
+ppSecurityGroup: !include ./resources/pp/ppSecurityGroup.yml
+ppLaunchTemplate: !include ./resources/pp/ppLaunchTemplate.yml
+ppCPUAlarm.yml: !include ./resources/pp/ppAlarms.yml
+
+webserverSecurityGroup: !include ./resources/webserver/webserverSecurityGroup.yml
+webserverLaunchTemplate: !include ./resources/webserver/webserverLaunchTemplate.yml
+webserverCPUAlarm: !include ./resources/webserver/webserverAlarms.yml
+
+coreSecurityGroup: !include ./resources/core/coreSecurityGroup.yml
+coreLaunchTemplate: !include ./resources/core/coreLaunchTemplate.yml
+coreCPUAlarm: !include ./resources/core/coreAlarms.yml
+
+martSecurityGroup: !include ./resources/mart/martSecurityGroup.yml
+martLaunchTemplate: !include ./resources/mart/martLaunchTemplate.yml
+martCPUAlarm: !include ./resources/mart/martAlarms.yml
+
+servicesSecurityGroup: !include ./resources/services/servicesSecurityGroup.yml
+servicesLaunchTemplate: !include ./resources/services/servicesLaunchTemplate.yml
+servicesCPUAlarm: !include ./resources/services/servicesAlarms.yml
+
+Outputs: !include ./resources/outputs/launchTemplateOutputIDs.yml

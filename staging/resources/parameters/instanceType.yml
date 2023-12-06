@@ -1,0 +1,9 @@
+
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t3.small
+      - t3.medium
+      - t3.large

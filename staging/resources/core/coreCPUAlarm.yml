@@ -1,0 +1,19 @@
+
+    Type: AWS::CloudWatch::Alarm
+    DependsOn:
+      - coreEC2Instance
+    Properties:
+      AlarmDescription: CPU alarm for my instance
+      AlarmActions:
+      - Ref: "devEmailsTopic"
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '60'
+      EvaluationPeriods: '3'
+      Threshold: '80'
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+      - Name: InstanceId
+        Value:
+          Ref: "coreEC2Instance"

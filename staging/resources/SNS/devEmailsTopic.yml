@@ -1,0 +1,8 @@
+
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+      - Endpoint: "Johnw@vogelheating.com"
+        Protocol: email
+#      - Endpoint: "ChristianV@vogelheating.com"
+#        Protocol: email

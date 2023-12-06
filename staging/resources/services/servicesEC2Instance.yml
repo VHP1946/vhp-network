@@ -1,0 +1,8 @@
+
+    Type: 'AWS::EC2::Instance'
+    DependsOn:
+      - servicesLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref servicesLaunchTemplate
+        Version: !GetAtt servicesLaunchTemplate.DefaultVersionNumber
