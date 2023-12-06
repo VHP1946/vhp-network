@@ -1,4 +1,931 @@
-file: 4
-other:
-  else: 4
-  somehting::else::entirely: 3
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates the VHP environment
+GatewayToInternet:
+  Properties:
+    InternetGatewayId: !Ref 'vhpInternetGateway'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::VPCGatewayAttachment
+Mappings:
+  amiMap:
+    us-east-1:
+      bastionHostAmiId: ami-0453709da2dd5b087
+      coreAmiId: ami-018f5ccfff4fbb51d
+      martAmiId: ami-018f5ccfff4fbb51d
+      ppAmiId: ami-018f5ccfff4fbb51d
+      servicesAmiId: ami-018f5ccfff4fbb51d
+      webserverAmiId: ami-018f5ccfff4fbb51d
+    us-east-2:
+      bastionHostAmiId: ami-0453709da2dd5b087
+      coreAmiId: ami-03127faf27ba03011
+      martAmiId: ami-051f438fa2e21daba
+      ppAmiId: ami-036538d509a244cf1
+      servicesAmiId: ami-0d14968c49ced30f4
+      webserverAmiId: ami-057ccb05d2acc8c3d
+NatPublicIP:
+  DependsOn: vhpVPC
+  Properties:
+    Domain: vpc
+  Type: AWS::EC2::EIP
+Outputs:
+  corelaunchTemplateId:
+    Export:
+      Name: !Sub '${environment}-core-lt-id'
+    Value: !Ref 'coreLaunchTemplate'
+  martlaunchTemplateId:
+    Export:
+      Name: !Sub '${environment}-mart-lt-id'
+    Value: !Ref 'martLaunchTemplate'
+  pplaunchTemplateId:
+    Export:
+      Name: !Sub '${environment}-pp-lt-id'
+    Value: !Ref 'ppLaunchTemplate'
+  serviceslaunchTemplateId:
+    Export:
+      Name: !Sub '${environment}-services-lt-id'
+    Value: !Ref 'servicesLaunchTemplate'
+  webserverlaunchTemplateId:
+    Export:
+      Name: !Sub '${environment}-webserver-lt-id'
+    Value: !Ref 'webserverLaunchTemplate'
+Parameters:
+  environment:
+    AllowedValues:
+    - dev
+    - prod
+    Default: dev
+    Type: String
+  instanceType:
+    AllowedValues:
+    - t2.nano
+    - t2.micro
+    - t3.small
+    - t3.medium
+    - t3.large
+    Default: t2.micro
+    Type: String
+  keypairName:
+    Description: EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+Resources: null
+bastionHostEC2:
+  DependsOn:
+  - bastionHostLaunchTemplate
+  LaunchTemplate: null
+  LaunchTemplateId: Ref bastionHostLaunchTemplate
+  Properties: null
+  Type: AWS::EC2::Instance
+  Version: !GetAtt 'bastionHostLaunchTemplate.DefaultVersionNumber'
+bastionHostLaunchTemplate:
+  DependsOn:
+  - instanceProfile
+  - bastionHostSecurityGroup
+  Properties:
+    LaunchTemplateData:
+      BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          DeleteOnTermination: true
+          Encrypted: true
+          Iops: 3000
+          Throughput: 125
+          VolumeSize: 8
+          VolumeType: gp3
+      EbsOptimized: true
+      IamInstanceProfile:
+        Arn: !GetAtt 'instanceProfile.Arn'
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - bastionHostAmiId
+      InstanceType: !Ref 'instanceType'
+      KeyName: !Ref 'keypairName'
+      MetadataOptions:
+        HttpTokens: required
+      Monitoring:
+        Enabled: true
+      NetworkInterfaces:
+      - DeviceIndex: 0
+        Groups:
+        - !Ref 'bastionHostSecurityGroup'
+        PrivateIpAddress: 10.0.1.15
+        SubnetId: !Ref 'publicSubnet'
+      TagSpecifications:
+      - ResourceType: instance
+        Tags:
+        - Key: Name
+          Value: !Sub '${environment}-vhp-bastion-host'
+        - Key: environment
+          Value: !Ref 'environment'
+      UserData: !Base64 '80'
+    TagSpecifications:
+    - ResourceType: launch-template
+      Tags:
+      - Key: environment
+        Value: !Ref 'environment'
+  Type: AWS::EC2::LaunchTemplate
+bastionHostSecurityGroup:
+  DependsOn:
+  - vhpVPC
+  Properties:
+    GroupDescription: allows ssh from the bastion host to the private instances
+    GroupName: !Sub '${environment}-bastion-host-sg'
+    SecurityGroupEgress:
+    - CidrIp: 0.0.0.0/0
+      IpProtocol: -1
+    SecurityGroupIngress:
+    - CidrIp: 0.0.0.0/0
+      FromPort: 3434
+      IpProtocol: tcp
+      ToPort: 3437
+    - CidrIp: 68.185.107.66/32
+      FromPort: 22
+      IpProtocol: tcp
+      ToPort: 22
+    Tags:
+    - Key: environment
+      Value: !Ref 'environment'
+    - Key: Name
+      Value: !Sub '${environment}-bastion-host-sg'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::SecurityGroup
+coreCPUAlarm:
+  DependsOn:
+  - coreEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: CPU alarm for my instance
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: coreEC2Instance
+    EvaluationPeriods: '3'
+    MetricName: CPUUtilization
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Average
+    Threshold: '80'
+  Type: AWS::CloudWatch::Alarm
+coreEC2Instance:
+  DependsOn:
+  - coreLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref 'coreLaunchTemplate'
+      Version: !GetAtt 'coreLaunchTemplate.DefaultVersionNumber'
+  Type: AWS::EC2::Instance
+coreLaunchTemplate:
+  DependsOn:
+  - instanceProfile
+  - coreSecurityGroup
+  Properties:
+    LaunchTemplateData:
+      BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          DeleteOnTermination: true
+          Encrypted: true
+          Iops: 3000
+          Throughput: 125
+          VolumeSize: 8
+          VolumeType: gp3
+      EbsOptimized: true
+      IamInstanceProfile:
+        Arn: !GetAtt 'instanceProfile.Arn'
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - coreAmiId
+      InstanceType: !Ref 'instanceType'
+      KeyName: !Ref 'keypairName'
+      MetadataOptions:
+        HttpTokens: required
+      Monitoring:
+        Enabled: true
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: false
+        DeviceIndex: 0
+        Groups:
+        - !Ref 'coreSecurityGroup'
+        PrivateIpAddress: 10.0.2.212
+        SubnetId: !Ref 'privateSubnet'
+      TagSpecifications:
+      - ResourceType: instance
+        Tags:
+        - Key: Name
+          Value: !Sub '${environment}-vhp-core'
+        - Key: environment
+          Value: !Ref 'environment'
+      UserData: !Base64 '80'
+    TagSpecifications:
+    - ResourceType: launch-template
+      Tags:
+      - Key: environment
+        Value: !Ref 'environment'
+  Type: AWS::EC2::LaunchTemplate
+coreSecurityGroup:
+  DependsOn:
+  - webserverSecurityGroup
+  Properties:
+    GroupDescription: allows ssh from vogel network
+    GroupName: !Sub '${environment}-core-sg'
+    SecurityGroupEgress:
+    - CidrIp: 0.0.0.0/0
+      Description: change source to services sg
+      FromPort: 7050
+      IpProtocol: tcp
+      ToPort: 7050
+    - CidrIp: 0.0.0.0/0
+      Description: change source to services sg
+      FromPort: 7000
+      IpProtocol: tcp
+      ToPort: 7000
+    - CidrIp: 0.0.0.0/0
+      Description: change source to mart sg
+      FromPort: 8080
+      IpProtocol: tcp
+      ToPort: 8080
+    SecurityGroupIngress:
+    - FromPort: 5000
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'ppSecurityGroup.GroupId'
+      ToPort: 5000
+    - FromPort: 22
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
+      ToPort: 22
+    Tags:
+    - Key: environment
+      Value: !Ref 'environment'
+    - Key: Name
+      Value: !Sub '${environment}-core-sg'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::SecurityGroup
+coreStatusCheckFailedAlarm:
+  DependsOn:
+  - coreEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: Send an email when instance status check fails for 15 consecutive
+      minutes.
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: coreEC2Instance
+    EvaluationPeriods: '15'
+    MetricName: StatusCheckFailed_System
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Minimum
+    Threshold: '0'
+  Type: AWS::CloudWatch::Alarm
+devEmailsTopic:
+  Properties:
+    Subscription:
+    - Endpoint: Johnw@vogelheating.com
+      Protocol: email
+  Type: AWS::SNS::Topic
+elasticIP: null
+instanceProfile:
+  DependsOn:
+  - instanceRole
+  Properties:
+    Roles:
+    - !Ref 'instanceRole'
+  Type: AWS::IAM::InstanceProfile
+instanceRole:
+  Properties:
+    AssumeRolePolicyDocument:
+      Statement:
+      - Action:
+        - sts:AssumeRole
+        Effect: Allow
+        Principal:
+          Service:
+          - ec2.amazonaws.com
+      Version: 2012-10-17
+    Description: IAM role used for our Launch template demo session
+    ManagedPolicyArns:
+    - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+    Tags:
+    - Key: environment
+      Value: !Ref 'environment'
+  Type: AWS::IAM::Role
+martCPUAlarm:
+  DependsOn:
+  - martEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: CPU alarm for my instance
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: martEC2Instance
+    EvaluationPeriods: '3'
+    MetricName: CPUUtilization
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Average
+    Threshold: '80'
+  Type: AWS::CloudWatch::Alarm
+martEC2Instance:
+  DependsOn:
+  - martLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref 'martLaunchTemplate'
+      Version: !GetAtt 'martLaunchTemplate.DefaultVersionNumber'
+  Type: AWS::EC2::Instance
+martLaunchTemplate:
+  DependsOn:
+  - instanceProfile
+  - martSecurityGroup
+  Properties:
+    LaunchTemplateData:
+      BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          DeleteOnTermination: true
+          Encrypted: true
+          Iops: 3000
+          Throughput: 125
+          VolumeSize: 8
+          VolumeType: gp3
+      EbsOptimized: true
+      IamInstanceProfile:
+        Arn: !GetAtt 'instanceProfile.Arn'
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - martAmiId
+      InstanceType: !Ref 'instanceType'
+      KeyName: !Ref 'keypairName'
+      MetadataOptions:
+        HttpTokens: required
+      Monitoring:
+        Enabled: true
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: false
+        DeviceIndex: 0
+        Groups:
+        - !Ref 'martSecurityGroup'
+        PrivateIpAddress: 10.0.2.116
+        SubnetId: !Ref 'privateSubnet'
+      TagSpecifications:
+      - ResourceType: instance
+        Tags:
+        - Key: Name
+          Value: !Sub '${environment}-vhp-mart'
+        - Key: environment
+          Value: !Ref 'environment'
+      UserData: !Base64 '80'
+    TagSpecifications:
+    - ResourceType: launch-template
+      Tags:
+      - Key: environment
+        Value: !Ref 'environment'
+  Type: AWS::EC2::LaunchTemplate
+martSecurityGroup:
+  DependsOn:
+  - coreSecurityGroup
+  Properties:
+    GroupDescription: allows ssh from vogel network
+    GroupName: !Sub '${environment}-mart-sg'
+    SecurityGroupEgress:
+    - CidrIp: 0.0.0.0/0
+      IpProtocol: -1
+    SecurityGroupIngress:
+    - FromPort: 22
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
+      ToPort: 22
+    - FromPort: 8080
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'coreSecurityGroup.GroupId'
+      ToPort: 8080
+    - CidrIp: 0.0.0.0/0
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+    Tags:
+    - Key: environment
+      Value: !Ref 'environment'
+    - Key: Name
+      Value: !Sub '${environment}-mart-sg'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::SecurityGroup
+martStatusCheckFailedAlarm:
+  DependsOn:
+  - martEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: Send an email when instance status check fails for 15 consecutive
+      minutes.
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: martEC2Instance
+    EvaluationPeriods: '15'
+    MetricName: StatusCheckFailed_System
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Minimum
+    Threshold: '0'
+  Type: AWS::CloudWatch::Alarm
+ppCPUAlarm.yml:
+  DependsOn:
+  - ppEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: CPU alarm for my instance
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: ppEC2Instance
+    EvaluationPeriods: '3'
+    MetricName: CPUUtilization
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Average
+    Threshold: '80'
+  Type: AWS::CloudWatch::Alarm
+ppEC2Instance:
+  DependsOn:
+  - ppLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref 'ppLaunchTemplate'
+      Version: !GetAtt 'ppLaunchTemplate.DefaultVersionNumber'
+  Type: AWS::EC2::Instance
+ppLaunchTemplate:
+  DependsOn:
+  - instanceProfile
+  - ppSecurityGroup
+  Properties:
+    LaunchTemplateData:
+      BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          DeleteOnTermination: true
+          Encrypted: true
+          Iops: 3000
+          Throughput: 125
+          VolumeSize: 8
+          VolumeType: gp3
+      EbsOptimized: true
+      IamInstanceProfile:
+        Arn: !GetAtt 'instanceProfile.Arn'
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - ppAmiId
+      InstanceType: !Ref 'instanceType'
+      KeyName: !Ref 'keypairName'
+      MetadataOptions:
+        HttpTokens: required
+      Monitoring:
+        Enabled: true
+      NetworkInterfaces:
+      - DeviceIndex: 0
+        Groups:
+        - !Ref 'ppSecurityGroup'
+        PrivateIpAddress: 10.0.1.19
+        SubnetId: !Ref 'publicSubnet'
+      TagSpecifications:
+      - ResourceType: instance
+        Tags:
+        - Key: Name
+          Value: !Sub '${environment}-vhp-pp'
+        - Key: environment
+          Value: !Ref 'environment'
+      UserData: !Base64 '80'
+    TagSpecifications:
+    - ResourceType: launch-template
+      Tags:
+      - Key: environment
+        Value: !Ref 'environment'
+  Type: AWS::EC2::LaunchTemplate
+ppSecurityGroup:
+  DependsOn:
+  - vhpVPC
+  Properties:
+    GroupDescription: allows HTTP and HTTPs traffic from the internet
+    GroupName: !Sub '${environment}-pp-sg'
+    SecurityGroupEgress:
+    - CidrIp: 0.0.0.0/0
+      IpProtocol: -1
+    SecurityGroupIngress:
+    - CidrIp: 0.0.0.0/0
+      FromPort: 80
+      IpProtocol: tcp
+      ToPort: 80
+    - CidrIp: 0.0.0.0/0
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+    - CidrIpv6: ::/0
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+    - CidrIpv6: ::/0
+      FromPort: 80
+      IpProtocol: tcp
+      ToPort: 80
+    - CidrIp: 68.185.107.66/32
+      FromPort: 22
+      IpProtocol: tcp
+      ToPort: 22
+    Tags:
+    - Key: environment
+      Value: !Ref 'environment'
+    - Key: Name
+      Value: !Sub '${environment}-pp-sg'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::SecurityGroup
+ppStatusCheckFailedAlarm:
+  DependsOn:
+  - ppEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: Send an email when instance status check fails for 15 consecutive
+      minutes.
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: ppEC2Instance
+    EvaluationPeriods: '15'
+    MetricName: StatusCheckFailed_System
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Minimum
+    Threshold: '0'
+  Type: AWS::CloudWatch::Alarm
+privateRoute:
+  DependsOn:
+  - GatewayToInternet
+  Properties:
+    DestinationCidrBlock: 0.0.0.0/0
+    NatGatewayId: !Ref 'vhpNatGateway'
+    RouteTableId: !Ref 'privateRouteTable'
+  Type: AWS::EC2::Route
+privateRouteTable:
+  Properties:
+    Tags:
+    - Key: Name
+      Value: !Sub '${environment}-privateRouteTable'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::RouteTable
+privateSubnet:
+  privateSubnet:
+    DependsOn:
+    - vhpVPC
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: ''
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: !Sub '${environment}-privateSubnet'
+      VpcId: !Ref 'vhpVPC'
+    Type: AWS::EC2::Subnet
+privateSubnetRouteTableAssociation:
+  Properties:
+    RouteTableId: !Ref 'privateRouteTable'
+    SubnetId: !Ref 'privateSubnet'
+  Type: AWS::EC2::SubnetRouteTableAssociation
+publicRoute:
+  DependsOn:
+  - GatewayToInternet
+  Properties:
+    DestinationCidrBlock: 0.0.0.0/0
+    GatewayId: !Ref 'vhpInternetGateway'
+    RouteTableId: !Ref 'publicRouteTable'
+  Type: AWS::EC2::Route
+publicRouteTable:
+  Properties:
+    Tags:
+    - Key: Name
+      Value: !Sub '${environment}-publicRouteTable'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::RouteTable
+publicSubnet:
+  DependsOn:
+  - vhpVPC
+  Properties:
+    AvailabilityZone:
+      Fn::Select:
+      - 0
+      - Fn::GetAZs: ''
+    CidrBlock: 10.0.1.0/24
+    MapPublicIpOnLaunch: true
+    Tags:
+    - Key: Name
+      Value: !Sub '${environment}-publicSubnet'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::Subnet
+publicSubnetRouteTableAssociation:
+  Properties:
+    RouteTableId: !Ref 'publicRouteTable'
+    SubnetId: !Ref 'publicSubnet'
+  Type: AWS::EC2::SubnetRouteTableAssociation
+servicesCPUAlarm:
+  DependsOn:
+  - servicesEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: CPU alarm for my instance
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: servicesEC2Instance
+    EvaluationPeriods: '3'
+    MetricName: CPUUtilization
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Average
+    Threshold: '80'
+  Type: AWS::CloudWatch::Alarm
+servicesEC2Instance:
+  DependsOn:
+  - servicesLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref 'servicesLaunchTemplate'
+      Version: !GetAtt 'servicesLaunchTemplate.DefaultVersionNumber'
+  Type: AWS::EC2::Instance
+servicesLaunchTemplate:
+  DependsOn:
+  - instanceProfile
+  - servicesSecurityGroup
+  Properties:
+    LaunchTemplateData:
+      BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          DeleteOnTermination: true
+          Encrypted: true
+          Iops: 3000
+          Throughput: 125
+          VolumeSize: 8
+          VolumeType: gp3
+      EbsOptimized: true
+      IamInstanceProfile:
+        Arn: !GetAtt 'instanceProfile.Arn'
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - servicesAmiId
+      InstanceType: !Ref 'instanceType'
+      KeyName: !Ref 'keypairName'
+      MetadataOptions:
+        HttpTokens: required
+      Monitoring:
+        Enabled: true
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: false
+        DeviceIndex: 0
+        Groups:
+        - !Ref 'servicesSecurityGroup'
+        PrivateIpAddress: 10.0.2.157
+        SubnetId: !Ref 'privateSubnet'
+      TagSpecifications:
+      - ResourceType: instance
+        Tags:
+        - Key: Name
+          Value: !Sub '${environment}-vhp-services'
+        - Key: environment
+          Value: !Ref 'environment'
+      UserData: !Base64 '80'
+    TagSpecifications:
+    - ResourceType: launch-template
+      Tags:
+      - Key: environment
+        Value: !Ref 'environment'
+  Type: AWS::EC2::LaunchTemplate
+servicesSecurityGroup:
+  DependsOn:
+  - martSecurityGroup
+  Properties:
+    GroupDescription: allows ssh from vogel network
+    GroupName: !Sub '${environment}-services-sg'
+    SecurityGroupEgress:
+    - CidrIp: 0.0.0.0/0
+      IpProtocol: -1
+    SecurityGroupIngress:
+    - FromPort: 22
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
+      ToPort: 22
+    - FromPort: 7050
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'coreSecurityGroup.GroupId'
+      ToPort: 7050
+    - FromPort: 7000
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'coreSecurityGroup.GroupId'
+      ToPort: 7000
+    - CidrIp: 0.0.0.0/0
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+    Tags:
+    - Key: environment
+      Value: !Ref 'environment'
+    - Key: Name
+      Value: !Sub '${environment}-services-sg'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::SecurityGroup
+servicesStatusCheckFailedAlarm:
+  DependsOn:
+  - servicesEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: Send an email when instance status check fails for 15 consecutive
+      minutes.
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: servicesEC2Instance
+    EvaluationPeriods: '15'
+    MetricName: StatusCheckFailed_System
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Minimum
+    Threshold: '0'
+  Type: AWS::CloudWatch::Alarm
+vhpInternetGateway:
+  Properties:
+    Tags:
+    - Key: Name
+      Value: !Sub '${environment}-publicInternetGateway'
+  Type: AWS::EC2::InternetGateway
+vhpNatGateway:
+  DependsOn: NatPublicIP
+  Properties:
+    AllocationId: !GetAtt 'NatPublicIP.AllocationId'
+    SubnetId: !Ref 'publicSubnet'
+    Tags:
+    - Key: Name
+      Value: !Sub '${environment}-natGateway'
+  Type: AWS::EC2::NatGateway
+vhpVPC:
+  Properties:
+    CidrBlock: 10.0.0.0/16
+    Tags:
+    - Key: Name
+      Value: !Sub '${environment}-vpc'
+  Type: AWS::EC2::VPC
+webserverCPUAlarm:
+  DependsOn:
+  - webserverEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: CPU alarm for my instance
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: webserverEC2Instance
+    EvaluationPeriods: '3'
+    MetricName: CPUUtilization
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Average
+    Threshold: '80'
+  Type: AWS::CloudWatch::Alarm
+webserverEC2Instance:
+  DependsOn:
+  - webserverLaunchTemplate
+  Properties:
+    LaunchTemplate:
+      LaunchTemplateId: !Ref 'webserverLaunchTemplate'
+      Version: !GetAtt 'webserverLaunchTemplate.DefaultVersionNumber'
+  Type: AWS::EC2::Instance
+webserverLaunchTemplate:
+  DependsOn:
+  - instanceProfile
+  - webserverSecurityGroup
+  Properties:
+    LaunchTemplateData:
+      BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          DeleteOnTermination: true
+          Encrypted: true
+          Iops: 3000
+          Throughput: 125
+          VolumeSize: 8
+          VolumeType: gp3
+      EbsOptimized: true
+      IamInstanceProfile:
+        Arn: !GetAtt 'instanceProfile.Arn'
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - webserverAmiId
+      InstanceType: !Ref 'instanceType'
+      KeyName: !Ref 'keypairName'
+      MetadataOptions:
+        HttpTokens: required
+      Monitoring:
+        Enabled: true
+      NetworkInterfaces:
+      - DeviceIndex: 0
+        Groups:
+        - !Ref 'webserverSecurityGroup'
+        PrivateIpAddress: 10.0.1.212
+        SubnetId: !Ref 'publicSubnet'
+      TagSpecifications:
+      - ResourceType: instance
+        Tags:
+        - Key: Name
+          Value: !Sub '${environment}-vhp-webserver'
+        - Key: environment
+          Value: !Ref 'environment'
+      UserData: !Base64 '80'
+    TagSpecifications:
+    - ResourceType: launch-template
+      Tags:
+      - Key: environment
+        Value: !Ref 'environment'
+  Type: AWS::EC2::LaunchTemplate
+webserverSecurityGroup:
+  DependsOn:
+  - ppSecurityGroup
+  Properties:
+    GroupDescription: allows HTTP and HTTPs traffic from the internet
+    GroupName: !Sub '${environment}-webserver-sg'
+    SecurityGroupEgress:
+    - CidrIp: 0.0.0.0/0
+      IpProtocol: -1
+    SecurityGroupIngress:
+    - CidrIp: 0.0.0.0/0
+      FromPort: 80
+      IpProtocol: tcp
+      ToPort: 80
+    - CidrIp: 0.0.0.0/0
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+    - CidrIpv6: ::/0
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+    - CidrIpv6: ::/0
+      FromPort: 80
+      IpProtocol: tcp
+      ToPort: 80
+    - FromPort: 4000
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'ppSecurityGroup.GroupId'
+      ToPort: 4000
+    - FromPort: 22
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
+      ToPort: 22
+    Tags:
+    - Key: environment
+      Value: !Ref 'environment'
+    - Key: Name
+      Value: !Sub '${environment}-webserver-sg'
+    VpcId: !Ref 'vhpVPC'
+  Type: AWS::EC2::SecurityGroup
+webserverStatusCheckFailedAlarm:
+  DependsOn:
+  - webserverEC2Instance
+  Properties:
+    AlarmActions:
+    - Ref: devEmailsTopic
+    AlarmDescription: Send an email when instance status check fails for 15 consecutive
+      minutes.
+    ComparisonOperator: GreaterThanThreshold
+    Dimensions:
+    - Name: InstanceId
+      Value:
+        Ref: webserverEC2Instance
+    EvaluationPeriods: '15'
+    MetricName: StatusCheckFailed_System
+    Namespace: AWS/EC2
+    Period: '60'
+    Statistic: Minimum
+    Threshold: '0'
+  Type: AWS::CloudWatch::Alarm

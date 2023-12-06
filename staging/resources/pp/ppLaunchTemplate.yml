@@ -19,7 +19,7 @@
           Arn: !GetAtt instanceProfile.Arn
         KeyName: !Ref keypairName
         UserData: !Base64 '80'
-        ImageId: !FindInMap 
+        ImageId: !FindInMap
           - amiMap
           - !Ref 'AWS::Region'
           - ppAmiId
@@ -47,11 +47,3 @@
           Tags:
             - Key: environment
               Value: !Ref environment
-  ppEC2Instance:
-    Type: 'AWS::EC2::Instance'
-    DependsOn:
-      - ppLaunchTemplate
-    Properties:
-      LaunchTemplate:
-        LaunchTemplateId: !Ref ppLaunchTemplate
-        Version: !GetAtt ppLaunchTemplate.DefaultVersionNumber

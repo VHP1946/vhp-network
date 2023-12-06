@@ -19,7 +19,7 @@
           Arn: !GetAtt instanceProfile.Arn
         KeyName: !Ref keypairName
         UserData: !Base64 '80'
-        ImageId: !FindInMap 
+        ImageId: !FindInMap
           - amiMap
           - !Ref 'AWS::Region'
           - coreAmiId
@@ -28,7 +28,7 @@
         NetworkInterfaces:
         - DeviceIndex: 0
           PrivateIpAddress: 10.0.2.212
-          SubnetId: !Ref privateSubnet 
+          SubnetId: !Ref privateSubnet
           Groups:
             - !Ref coreSecurityGroup
           AssociatePublicIpAddress: false
@@ -48,11 +48,4 @@
           Tags:
             - Key: environment
               Value: !Ref environment
-  coreEC2Instance:
-    Type: 'AWS::EC2::Instance'
-    DependsOn:
-      - coreLaunchTemplate
-    Properties:
-      LaunchTemplate:
-        LaunchTemplateId: !Ref coreLaunchTemplate
-        Version: !GetAtt coreLaunchTemplate.DefaultVersionNumber
+  
