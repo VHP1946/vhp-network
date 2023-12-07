@@ -1,0 +1,33 @@
+
+    Type: 'AWS::EC2::SecurityGroup'
+    DependsOn:
+      - martSecurityGroup
+    Properties:
+      GroupDescription: allows ssh from vogel network
+      GroupName: vhp-services-sg 
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !GetAtt bastionHostSecurityGroup.GroupId
+        - IpProtocol: tcp
+          FromPort: 7050
+          ToPort: 7050
+          SourceSecurityGroupId: !GetAtt coreSecurityGroup.GroupId
+        - IpProtocol: tcp
+          FromPort: 7000
+          ToPort: 7000
+          SourceSecurityGroupId: !GetAtt coreSecurityGroup.GroupId
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref vhpVPC
+      Tags:
+        - Key: environment
+          Value: !Ref environment
+        - Key: Name
+          Value: !Sub '${environment}-services-sg'

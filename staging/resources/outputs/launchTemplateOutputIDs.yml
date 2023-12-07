@@ -1,0 +1,25 @@
+
+  webserverlaunchTemplateId:
+    Value: !Ref webserverLaunchTemplate
+    Export:
+      Name: !Sub '${environment}-webserver-lt-id'
+  corelaunchTemplateId:
+    Value: !Ref coreLaunchTemplate
+    Export:
+      Name: !Sub '${environment}-core-lt-id'
+  martlaunchTemplateId:
+    Value: !Ref martLaunchTemplate
+    Export:
+      Name: !Sub '${environment}-mart-lt-id'
+  serviceslaunchTemplateId:
+    Value: !Ref servicesLaunchTemplate
+    Export:
+      Name: !Sub '${environment}-services-lt-id'
+  pplaunchTemplateId:
+    Value: !Ref ppLaunchTemplate
+    Export:
+      Name: !Sub '${environment}-pp-lt-id'
+  bastionHostlaunchTemplateId:
+    Value: !Ref bastionHostLaunchTemplate
+    Export:
+      Name: !Sub '${environment}-bastion-host-lt-id'
