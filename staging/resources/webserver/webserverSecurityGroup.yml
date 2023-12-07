@@ -4,7 +4,7 @@
       - ppSecurityGroup
     Properties:
       GroupDescription: allows HTTP and HTTPs traffic from the internet
-      GroupName: vhp-webserver-sg #change this back if it doesnt work
+      GroupName: vhp-webserver-sg 
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80

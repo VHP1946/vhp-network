@@ -4,7 +4,7 @@
       - webserverSecurityGroup
     Properties:
       GroupDescription: allows ssh from vogel network
-      GroupName: vhp-core-sg #change this back if it doesnt work
+      GroupName: vhp-core-sg 
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 5000
