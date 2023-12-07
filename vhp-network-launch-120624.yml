@@ -15,7 +15,7 @@ Mappings:
       martAmiId: ami-051f438fa2e21daba
       ppAmiId: ami-036538d509a244cf1
       servicesAmiId: ami-0d14968c49ced30f4
-      webserverAmiId: ami-0fe89162924b91940
+      webserverAmiId: ami-057ccb05d2acc8c3d
 Outputs:
   bastionHostlaunchTemplateId:
     Export:
@@ -132,7 +132,7 @@ Resources:
     - vhpVPC
     Properties:
       GroupDescription: allows ssh from the bastion host to the private instances
-      GroupName: vhp-bastion-host-sg
+      GroupName: !Sub '${environment}-bastion-host-sg'
       SecurityGroupEgress:
       - CidrIp: 0.0.0.0/0
         IpProtocol: -1
@@ -233,7 +233,7 @@ Resources:
     - webserverSecurityGroup
     Properties:
       GroupDescription: allows ssh from vogel network
-      GroupName: vhp-core-sg
+      GroupName: !Sub '${environment}-core-sg'
       SecurityGroupEgress:
       - CidrIp: 0.0.0.0/0
         Description: change source to services sg
@@ -398,7 +398,7 @@ Resources:
     - coreSecurityGroup
     Properties:
       GroupDescription: allows ssh from vogel network
-      GroupName: vhp-mart-sg
+      GroupName: !Sub '${environment}-mart-sg'
       SecurityGroupEgress:
       - CidrIp: 0.0.0.0/0
         IpProtocol: -1
@@ -522,7 +522,7 @@ Resources:
     - vhpVPC
     Properties:
       GroupDescription: allows HTTP and HTTPs traffic from the internet
-      GroupName: vhp-pp-sg
+      GroupName: !Sub '${environment}-pp-sg'
       SecurityGroupEgress:
       - CidrIp: 0.0.0.0/0
         IpProtocol: -1
@@ -725,7 +725,7 @@ Resources:
     - martSecurityGroup
     Properties:
       GroupDescription: allows ssh from vogel network
-      GroupName: vhp-services-sg
+      GroupName: !Sub '${environment}-services-sg'
       SecurityGroupEgress:
       - CidrIp: 0.0.0.0/0
         IpProtocol: -1
@@ -875,7 +875,7 @@ Resources:
     - ppSecurityGroup
     Properties:
       GroupDescription: allows HTTP and HTTPs traffic from the internet
-      GroupName: vhp-webserver-sg
+      GroupName: !Sub '${environment}-webserver-sg'
       SecurityGroupEgress:
       - CidrIp: 0.0.0.0/0
         IpProtocol: -1
