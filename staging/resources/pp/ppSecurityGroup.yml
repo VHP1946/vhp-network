@@ -4,7 +4,7 @@
       - vhpVPC
     Properties:
       GroupDescription: allows HTTP and HTTPs traffic from the internet
-      GroupName: !Sub '${environment}-pp-sg'
+      GroupName: vhp-pp-sg #change this back if it doesnt work
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80

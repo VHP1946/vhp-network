@@ -29,7 +29,7 @@
         - DeviceIndex: 0
           PrivateIpAddress: 10.0.1.212
           SubnetId: !Ref publicSubnet
-          Groups:
+          Groups: 
             - !Ref webserverSecurityGroup
         MetadataOptions:
           HttpTokens: required
