@@ -9,7 +9,7 @@ Mappings:
       servicesAmiId: ami-018f5ccfff4fbb51d
       webserverAmiId: ami-018f5ccfff4fbb51d
     us-east-2:
-      bastionHostAmiId: ami-0e030f74fa508f8b7
+      bastionHostAmiId: ami-0a6ffc851da424dec
       coreAmiId: ami-0b7445c5a28aaa87e
       martAmiId: ami-039ca8158a0022d2e
       servicesAmiId: ami-0f060672f5039adb5
@@ -140,6 +140,10 @@ Resources:
         FromPort: 3434
         IpProtocol: tcp
         ToPort: 3437
+      - CidrIp: 0.0.0.0/0
+        FromPort: 6000
+        IpProtocol: tcp
+        ToPort: 6004
       - CidrIp: 68.185.107.66/32
         FromPort: 22
         IpProtocol: tcp
@@ -259,6 +263,10 @@ Resources:
         IpProtocol: tcp
         SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
         ToPort: 22
+      - FromPort: 6000
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
+        ToPort: 6000
       Tags:
       - Key: environment
         Value: !Ref 'environment'
@@ -412,6 +420,10 @@ Resources:
         IpProtocol: tcp
         SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
         ToPort: 22
+      - FromPort: 6000
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
+        ToPort: 6000
       - FromPort: 8080
         IpProtocol: tcp
         SourceSecurityGroupId: !GetAtt 'coreSecurityGroup.GroupId'
@@ -612,6 +624,10 @@ Resources:
         IpProtocol: tcp
         SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
         ToPort: 22
+      - FromPort: 6000
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
+        ToPort: 6000
       - FromPort: 7050
         IpProtocol: tcp
         SourceSecurityGroupId: !GetAtt 'coreSecurityGroup.GroupId'
@@ -781,6 +797,10 @@ Resources:
         IpProtocol: tcp
         SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
         ToPort: 22
+      - FromPort: 6000
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
+        ToPort: 6000
       Tags:
       - Key: environment
         Value: !Ref 'environment'
