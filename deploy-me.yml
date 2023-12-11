@@ -1,6 +1,6 @@
 template-file-path: vhp-network-launch.yml
 parameters:
-  environment: prod
+  environment: dev
   keypairName: "christian-key"
   instanceType: t2.micro
 tags: {}
