@@ -19,10 +19,10 @@
           Arn: !GetAtt instanceProfile.Arn
         KeyName: !Ref keypairName
         UserData: !Base64 '80'
-        ImageId: !FindInMap
-          - amiMap
-          - !Ref 'AWS::Region'
-          - bastionHostAmiId
+#        ImageId: !FindInMap
+#          - amiMap
+#          - !Ref 'AWS::Region'
+#          - bastionHostAmiId
         #ImageId: ami-036538d509a244cf1
         InstanceType: !Ref instanceType
         NetworkInterfaces:
