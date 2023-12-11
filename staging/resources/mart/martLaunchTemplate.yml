@@ -19,10 +19,10 @@
           Arn: !GetAtt instanceProfile.Arn
         KeyName: !Ref keypairName
         UserData: !Base64 '80'
-        ImageId: !FindInMap
-          - amiMap
-          - !Ref 'AWS::Region'
-          - martAmiId
+#        ImageId: !FindInMap
+#          - amiMap
+#          - !Ref 'AWS::Region'
+#          - martAmiId
         #ImageId: ami-051f438fa2e21daba
         InstanceType: !Ref instanceType
         NetworkInterfaces:
