@@ -65,7 +65,7 @@ Resources:
     Properties:
       Domain: vpc
     Type: AWS::EC2::EIP
-  bastionHost:
+  bastionHostEC2:
     DependsOn:
     - bastionHostLaunchTemplate
     Properties:
