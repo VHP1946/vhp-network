@@ -69,6 +69,10 @@ Resources:
     DependsOn:
     - bastionHostLaunchTemplate
     Properties:
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - bastionHostAmiId
       LaunchTemplate:
         LaunchTemplateId: !Ref 'bastionHostLaunchTemplate'
         Version: !GetAtt 'bastionHostLaunchTemplate.DefaultVersionNumber'
@@ -96,10 +100,6 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt 'instanceProfile.Arn'
-        ImageId: !FindInMap
-        - amiMap
-        - !Ref 'AWS::Region'
-        - bastionHostAmiId
         InstanceType: !Ref 'instanceType'
         KeyName: !Ref 'keypairName'
         MetadataOptions:
