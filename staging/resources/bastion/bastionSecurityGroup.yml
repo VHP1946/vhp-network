@@ -13,7 +13,7 @@
         - IpProtocol: tcp
           FromPort: 6000
           ToPort: 6004
-          CidrIp: 0.0.0.0/0          
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22

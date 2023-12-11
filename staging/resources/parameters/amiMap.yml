@@ -7,7 +7,7 @@
       martAmiId: ami-018f5ccfff4fbb51d
       servicesAmiId: ami-018f5ccfff4fbb51d
     us-east-2: # ohio
-      bastionHostAmiId: ami-0e030f74fa508f8b7
+      bastionHostAmiId: ami-0a6ffc851da424dec
       #ppAmiId: ami-036538d509a244cf1
       webserverAmiId: ami-074d7bfdaee42527a
       coreAmiId: ami-0b7445c5a28aaa87e
