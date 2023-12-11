@@ -6,10 +6,10 @@
       GroupDescription: allows ssh from vogel network
       GroupName: vhp-core-sg 
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 5000
-          ToPort: 5000
-          SourceSecurityGroupId: !GetAtt ppSecurityGroup.GroupId
+#        - IpProtocol: tcp
+#          FromPort: 5000
+#          ToPort: 5000
+#          SourceSecurityGroupId: !GetAtt ppSecurityGroup.GroupId
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22

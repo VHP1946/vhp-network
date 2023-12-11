@@ -1,7 +1,7 @@
 
     Type: 'AWS::EC2::SecurityGroup'
-    DependsOn:
-      - ppSecurityGroup
+#    DependsOn:
+#      - ppSecurityGroup
     Properties:
       GroupDescription: allows HTTP and HTTPs traffic from the internet
       GroupName: vhp-webserver-sg 
@@ -22,10 +22,10 @@
           FromPort: 80
           ToPort: 80
           CidrIpv6: '::/0'
-        - IpProtocol: tcp
-          FromPort: 4000
-          ToPort: 4000
-          SourceSecurityGroupId: !GetAtt ppSecurityGroup.GroupId
+#        - IpProtocol: tcp
+#          FromPort: 4000
+#          ToPort: 4000
+#          SourceSecurityGroupId: !GetAtt ppSecurityGroup.GroupId
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22

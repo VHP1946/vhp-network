@@ -6,3 +6,8 @@
       LaunchTemplate:
         LaunchTemplateId: !Ref servicesLaunchTemplate
         Version: !GetAtt servicesLaunchTemplate.DefaultVersionNumber
+      Tags:
+        - Key: environment
+          Value: !Ref environment
+        - Key: Name
+          Value: !Sub '${environment}-vhp-services'

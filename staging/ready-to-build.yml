@@ -38,11 +38,11 @@ Resources:
   bastionHostLaunchTemplate: !include ./resources/bastion/bastionLaunchTemplate.yml
   bastionHostEC2: !include ./resources/bastion/bastionHostEC2.yml
 
-  ppSecurityGroup: !include ./resources/pp/ppSecurityGroup.yml
-  ppLaunchTemplate: !include ./resources/pp/ppLaunchTemplate.yml
-  ppEC2Instance: !include ./resources/pp/ppEC2Instance.yml
-  ppCPUAlarm: !include ./resources/pp/ppCPUAlarm.yml
-  ppStatusCheckFailedAlarm: !include ./resources/pp/ppStatusCheckFailedAlarm.yml
+  #ppSecurityGroup: !include ./resources/pp/ppSecurityGroup.yml
+  #ppLaunchTemplate: !include ./resources/pp/ppLaunchTemplate.yml
+  #ppEC2Instance: !include ./resources/pp/ppEC2Instance.yml
+  #ppCPUAlarm: !include ./resources/pp/ppCPUAlarm.yml
+  #ppStatusCheckFailedAlarm: !include ./resources/pp/ppStatusCheckFailedAlarm.yml
 
   webserverSecurityGroup: !include ./resources/webserver/webserverSecurityGroup.yml
   webserverLaunchTemplate: !include ./resources/webserver/webserverLaunchTemplate.yml

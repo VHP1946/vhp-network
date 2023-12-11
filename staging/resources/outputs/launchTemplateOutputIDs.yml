@@ -15,10 +15,10 @@
     Value: !Ref servicesLaunchTemplate
     Export:
       Name: !Sub '${environment}-services-lt-id'
-  pplaunchTemplateId:
-    Value: !Ref ppLaunchTemplate
-    Export:
-      Name: !Sub '${environment}-pp-lt-id'
+#  pplaunchTemplateId:
+#    Value: !Ref ppLaunchTemplate
+#    Export:
+#      Name: !Sub '${environment}-pp-lt-id'
   bastionHostlaunchTemplateId:
     Value: !Ref bastionHostLaunchTemplate
     Export:
