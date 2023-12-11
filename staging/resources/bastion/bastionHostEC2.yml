@@ -6,6 +6,10 @@
       LaunchTemplate:
         LaunchTemplateId: !Ref bastionHostLaunchTemplate
         Version: !GetAtt bastionHostLaunchTemplate.DefaultVersionNumber
+      ImageId: !FindInMap
+        - amiMap
+        - !Ref 'AWS::Region'
+        - bastionHostAmiId
       Tags:
         - Key: environment
           Value: !Ref environment
