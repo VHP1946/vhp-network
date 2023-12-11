@@ -14,6 +14,10 @@
           FromPort: 22
           ToPort: 22
           SourceSecurityGroupId: !GetAtt bastionHostSecurityGroup.GroupId
+        - IpProtocol: tcp
+          FromPort: 6000
+          ToPort: 6000
+          SourceSecurityGroupId: !GetAtt bastionHostSecurityGroup.GroupId
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 7050
