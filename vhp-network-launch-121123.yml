@@ -6,14 +6,16 @@ Mappings:
       bastionHostAmiId: ami-0453709da2dd5b087
       coreAmiId: ami-018f5ccfff4fbb51d
       martAmiId: ami-018f5ccfff4fbb51d
+      ppAmiId: ami-018f5ccfff4fbb51d
       servicesAmiId: ami-018f5ccfff4fbb51d
       webserverAmiId: ami-018f5ccfff4fbb51d
     us-east-2:
-      bastionHostAmiId: ami-0e030f74fa508f8b7
-      coreAmiId: ami-0b7445c5a28aaa87e
-      martAmiId: ami-039ca8158a0022d2e
-      servicesAmiId: ami-0f060672f5039adb5
-      webserverAmiId: ami-074d7bfdaee42527a
+      bastionHostAmiId: ami-0453709da2dd5b087
+      coreAmiId: ami-03127faf27ba03011
+      martAmiId: ami-051f438fa2e21daba
+      ppAmiId: ami-036538d509a244cf1
+      servicesAmiId: ami-0d14968c49ced30f4
+      webserverAmiId: ami-0fe89162924b91940
 Outputs:
   bastionHostlaunchTemplateId:
     Export:
@@ -27,6 +29,10 @@ Outputs:
     Export:
       Name: !Sub '${environment}-mart-lt-id'
     Value: !Ref 'martLaunchTemplate'
+  pplaunchTemplateId:
+    Export:
+      Name: !Sub '${environment}-pp-lt-id'
+    Value: !Ref 'ppLaunchTemplate'
   serviceslaunchTemplateId:
     Export:
       Name: !Sub '${environment}-services-lt-id'
@@ -72,11 +78,6 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref 'bastionHostLaunchTemplate'
         Version: !GetAtt 'bastionHostLaunchTemplate.DefaultVersionNumber'
-      Tags:
-      - Key: environment
-        Value: !Ref 'environment'
-      - Key: Name
-        Value: !Sub '${environment}-vhp-bastion-host'
     Type: AWS::EC2::Instance
   bastionHostLaunchTemplate:
     DependsOn:
@@ -177,11 +178,6 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref 'coreLaunchTemplate'
         Version: !GetAtt 'coreLaunchTemplate.DefaultVersionNumber'
-      Tags:
-      - Key: environment
-        Value: !Ref 'environment'
-      - Key: Name
-        Value: !Sub '${environment}-vhp-core'
     Type: AWS::EC2::Instance
   coreLaunchTemplate:
     DependsOn:
@@ -255,6 +251,10 @@ Resources:
         IpProtocol: tcp
         ToPort: 8080
       SecurityGroupIngress:
+      - FromPort: 5000
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt 'ppSecurityGroup.GroupId'
+        ToPort: 5000
       - FromPort: 22
         IpProtocol: tcp
         SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
@@ -343,11 +343,6 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref 'martLaunchTemplate'
         Version: !GetAtt 'martLaunchTemplate.DefaultVersionNumber'
-      Tags:
-      - Key: environment
-        Value: !Ref 'environment'
-      - Key: Name
-        Value: !Sub '${environment}-vhp-mart'
     Type: AWS::EC2::Instance
   martLaunchTemplate:
     DependsOn:
@@ -440,6 +435,138 @@ Resources:
       - Name: InstanceId
         Value:
           Ref: martEC2Instance
+      EvaluationPeriods: '15'
+      MetricName: StatusCheckFailed_System
+      Namespace: AWS/EC2
+      Period: '60'
+      Statistic: Minimum
+      Threshold: '0'
+    Type: AWS::CloudWatch::Alarm
+  ppCPUAlarm:
+    DependsOn:
+    - ppEC2Instance
+    Properties:
+      AlarmActions:
+      - Ref: devEmailsTopic
+      AlarmDescription: CPU alarm for my instance
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+      - Name: InstanceId
+        Value:
+          Ref: ppEC2Instance
+      EvaluationPeriods: '3'
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Period: '60'
+      Statistic: Average
+      Threshold: '80'
+    Type: AWS::CloudWatch::Alarm
+  ppEC2Instance:
+    DependsOn:
+    - ppLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'ppLaunchTemplate'
+        Version: !GetAtt 'ppLaunchTemplate.DefaultVersionNumber'
+    Type: AWS::EC2::Instance
+  ppLaunchTemplate:
+    DependsOn:
+    - instanceProfile
+    - ppSecurityGroup
+    Properties:
+      LaunchTemplateData:
+        BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            Iops: 3000
+            Throughput: 125
+            VolumeSize: 8
+            VolumeType: gp3
+        EbsOptimized: true
+        IamInstanceProfile:
+          Arn: !GetAtt 'instanceProfile.Arn'
+        ImageId: !FindInMap
+        - amiMap
+        - !Ref 'AWS::Region'
+        - ppAmiId
+        InstanceType: !Ref 'instanceType'
+        KeyName: !Ref 'keypairName'
+        MetadataOptions:
+          HttpTokens: required
+        Monitoring:
+          Enabled: true
+        NetworkInterfaces:
+        - DeviceIndex: 0
+          Groups:
+          - !Ref 'ppSecurityGroup'
+          PrivateIpAddress: 10.0.1.19
+          SubnetId: !Ref 'publicSubnet'
+        TagSpecifications:
+        - ResourceType: instance
+          Tags:
+          - Key: Name
+            Value: !Sub '${environment}-vhp-pp'
+          - Key: environment
+            Value: !Ref 'environment'
+        UserData: !Base64 '80'
+      TagSpecifications:
+      - ResourceType: launch-template
+        Tags:
+        - Key: environment
+          Value: !Ref 'environment'
+    Type: AWS::EC2::LaunchTemplate
+  ppSecurityGroup:
+    DependsOn:
+    - vhpVPC
+    Properties:
+      GroupDescription: allows HTTP and HTTPs traffic from the internet
+      GroupName: vhp-pp-sg
+      SecurityGroupEgress:
+      - CidrIp: 0.0.0.0/0
+        IpProtocol: -1
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: 80
+        IpProtocol: tcp
+        ToPort: 80
+      - CidrIp: 0.0.0.0/0
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIpv6: ::/0
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIpv6: ::/0
+        FromPort: 80
+        IpProtocol: tcp
+        ToPort: 80
+      - CidrIp: 68.185.107.66/32
+        FromPort: 22
+        IpProtocol: tcp
+        ToPort: 22
+      Tags:
+      - Key: environment
+        Value: !Ref 'environment'
+      - Key: Name
+        Value: !Sub '${environment}-pp-sg'
+      VpcId: !Ref 'vhpVPC'
+    Type: AWS::EC2::SecurityGroup
+  ppStatusCheckFailedAlarm:
+    DependsOn:
+    - ppEC2Instance
+    Properties:
+      AlarmActions:
+      - Ref: devEmailsTopic
+      AlarmDescription: Send an email when instance status check fails for 15 consecutive
+        minutes.
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+      - Name: InstanceId
+        Value:
+          Ref: ppEC2Instance
       EvaluationPeriods: '15'
       MetricName: StatusCheckFailed_System
       Namespace: AWS/EC2
@@ -543,11 +670,6 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref 'servicesLaunchTemplate'
         Version: !GetAtt 'servicesLaunchTemplate.DefaultVersionNumber'
-      Tags:
-      - Key: environment
-        Value: !Ref 'environment'
-      - Key: Name
-        Value: !Sub '${environment}-vhp-services'
     Type: AWS::EC2::Instance
   servicesLaunchTemplate:
     DependsOn:
@@ -699,11 +821,6 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref 'webserverLaunchTemplate'
         Version: !GetAtt 'webserverLaunchTemplate.DefaultVersionNumber'
-      Tags:
-      - Key: environment
-        Value: !Ref 'environment'
-      - Key: Name
-        Value: !Sub '${environment}-vhp-webserver'
     Type: AWS::EC2::Instance
   webserverLaunchTemplate:
     DependsOn:
@@ -754,6 +871,8 @@ Resources:
           Value: !Ref 'environment'
     Type: AWS::EC2::LaunchTemplate
   webserverSecurityGroup:
+    DependsOn:
+    - ppSecurityGroup
     Properties:
       GroupDescription: allows HTTP and HTTPs traffic from the internet
       GroupName: vhp-webserver-sg
@@ -777,6 +896,10 @@ Resources:
         FromPort: 80
         IpProtocol: tcp
         ToPort: 80
+      - FromPort: 4000
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt 'ppSecurityGroup.GroupId'
+        ToPort: 4000
       - FromPort: 22
         IpProtocol: tcp
         SourceSecurityGroupId: !GetAtt 'bastionHostSecurityGroup.GroupId'
