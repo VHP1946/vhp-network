@@ -11,6 +11,10 @@
           ToPort: 3437
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
+          FromPort: 6000
+          ToPort: 6004
+          CidrIp: 0.0.0.0/0          
+        - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
           CidrIp: 68.185.107.66/32

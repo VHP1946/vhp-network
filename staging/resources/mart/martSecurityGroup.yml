@@ -11,6 +11,10 @@
           ToPort: 22
           SourceSecurityGroupId: !GetAtt bastionHostSecurityGroup.GroupId
         - IpProtocol: tcp
+          FromPort: 6000
+          ToPort: 6000
+          SourceSecurityGroupId: !GetAtt bastionHostSecurityGroup.GroupId
+        - IpProtocol: tcp
           FromPort: 8080
           ToPort: 8080
           SourceSecurityGroupId: !GetAtt coreSecurityGroup.GroupId
