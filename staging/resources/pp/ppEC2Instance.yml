@@ -1,0 +1,13 @@
+
+    Type: 'AWS::EC2::Instance'
+    DependsOn:
+      - ppLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref ppLaunchTemplate
+        Version: !GetAtt ppLaunchTemplate.DefaultVersionNumber
+      Tags:
+        - Key: environment
+          Value: !Ref environment
+        - Key: Name
+          Value: !Sub '${environment}-vhp-pp'

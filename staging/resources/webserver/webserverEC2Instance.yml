@@ -1,0 +1,13 @@
+
+    Type: 'AWS::EC2::Instance'
+    DependsOn:
+      - webserverLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref webserverLaunchTemplate
+        Version: !GetAtt webserverLaunchTemplate.DefaultVersionNumber
+      Tags:
+        - Key: environment
+          Value: !Ref environment
+        - Key: Name
+          Value: !Sub '${environment}-vhp-webserver'

@@ -1,0 +1,13 @@
+
+    Type: 'AWS::EC2::Instance'
+    DependsOn:
+      - martLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref martLaunchTemplate
+        Version: !GetAtt martLaunchTemplate.DefaultVersionNumber
+      Tags:
+        - Key: environment
+          Value: !Ref environment
+        - Key: Name
+          Value: !Sub '${environment}-vhp-mart'

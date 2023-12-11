@@ -1,0 +1,13 @@
+
+    Type: 'AWS::EC2::Instance'
+    DependsOn:
+      - bastionHostLaunchTemplate
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref bastionHostLaunchTemplate
+        Version: !GetAtt bastionHostLaunchTemplate.DefaultVersionNumber
+      Tags:
+        - Key: environment
+          Value: !Ref environment
+        - Key: Name
+          Value: !Sub '${environment}-vhp-bastion-host'

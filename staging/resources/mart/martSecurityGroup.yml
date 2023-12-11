@@ -4,7 +4,7 @@
       - coreSecurityGroup
     Properties:
       GroupDescription: allows ssh from vogel network
-      GroupName: vhp-mart-sg #change this back if it doesnt work
+      GroupName: vhp-mart-sg 
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
