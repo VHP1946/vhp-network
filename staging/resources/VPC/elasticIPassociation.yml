@@ -4,4 +4,4 @@
       - webserverEC2Instance    
     Properties:
       AllocationId: !Ref elasticIP
-      InstanceId: webserverEC2Instance
+      InstanceId: !Ref webserverEC2Instance
