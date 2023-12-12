@@ -3,5 +3,5 @@
     DependsOn:
       - webserverEC2Instance    
     Properties:
-      AllocationId: webserverEIP
+      AllocationId: !Ref elasticIP
       InstanceId: webserverEC2Instance

@@ -36,6 +36,9 @@ Outputs:
       Name: !Sub '${environment}-webserver-lt-id'
     Value: !Ref 'webserverLaunchTemplate'
 Parameters:
+  elasticIP:
+    Description: Attach the static elastic IP Allocation ID
+    Type: String
   environment:
     AllowedValues:
     - dev
@@ -178,6 +181,10 @@ Resources:
     DependsOn:
     - coreLaunchTemplate
     Properties:
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - coreAmiId
       LaunchTemplate:
         LaunchTemplateId: !Ref 'coreLaunchTemplate'
         Version: !GetAtt 'coreLaunchTemplate.DefaultVersionNumber'
@@ -205,10 +212,6 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt 'instanceProfile.Arn'
-        ImageId: !FindInMap
-        - amiMap
-        - !Ref 'AWS::Region'
-        - coreAmiId
         InstanceType: !Ref 'instanceType'
         KeyName: !Ref 'keypairName'
         MetadataOptions:
@@ -300,6 +303,13 @@ Resources:
       - Endpoint: Johnw@vogelheating.com
         Protocol: email
     Type: AWS::SNS::Topic
+  elasticIPassociation:
+    DependsOn:
+    - webserverEC2Instance
+    Properties:
+      AllocationId: !Ref 'elasticIP'
+      InstanceId: webserverEC2Instance
+    Type: AWS::EC2::EIPAssociation
   instanceProfile:
     DependsOn:
     - instanceRole
@@ -348,6 +358,10 @@ Resources:
     DependsOn:
     - martLaunchTemplate
     Properties:
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - martAmiId
       LaunchTemplate:
         LaunchTemplateId: !Ref 'martLaunchTemplate'
         Version: !GetAtt 'martLaunchTemplate.DefaultVersionNumber'
@@ -375,10 +389,6 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt 'instanceProfile.Arn'
-        ImageId: !FindInMap
-        - amiMap
-        - !Ref 'AWS::Region'
-        - martAmiId
         InstanceType: !Ref 'instanceType'
         KeyName: !Ref 'keypairName'
         MetadataOptions:
@@ -552,6 +562,10 @@ Resources:
     DependsOn:
     - servicesLaunchTemplate
     Properties:
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - servicesAmiId
       LaunchTemplate:
         LaunchTemplateId: !Ref 'servicesLaunchTemplate'
         Version: !GetAtt 'servicesLaunchTemplate.DefaultVersionNumber'
@@ -579,10 +593,6 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt 'instanceProfile.Arn'
-        ImageId: !FindInMap
-        - amiMap
-        - !Ref 'AWS::Region'
-        - servicesAmiId
         InstanceType: !Ref 'instanceType'
         KeyName: !Ref 'keypairName'
         MetadataOptions:
@@ -712,6 +722,10 @@ Resources:
     DependsOn:
     - webserverLaunchTemplate
     Properties:
+      ImageId: !FindInMap
+      - amiMap
+      - !Ref 'AWS::Region'
+      - webserverAmiId
       LaunchTemplate:
         LaunchTemplateId: !Ref 'webserverLaunchTemplate'
         Version: !GetAtt 'webserverLaunchTemplate.DefaultVersionNumber'
@@ -739,10 +753,6 @@ Resources:
         EbsOptimized: true
         IamInstanceProfile:
           Arn: !GetAtt 'instanceProfile.Arn'
-        ImageId: !FindInMap
-        - amiMap
-        - !Ref 'AWS::Region'
-        - webserverAmiId
         InstanceType: !Ref 'instanceType'
         KeyName: !Ref 'keypairName'
         MetadataOptions:

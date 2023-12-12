@@ -1,6 +1,7 @@
-template-file-path: vhp-network-launch.yml
+template-file-path: ./vhp-network-launch.yml
 parameters: 
   keypairName: "christian-key"
   instanceType: t2.micro
   environment: dev
+  elasticIP: eipalloc-026ee1762b488882b
 tags: {}
