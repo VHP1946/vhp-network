@@ -16,7 +16,7 @@
 
 - To change AMIs you would like to use, go to the parameters folder and open the amiMap file. Replace the AMI IDs you would like to use with the ones that are in the file.
 
-# Steps to deploy our VHP network through cloudformation. 
+## Steps to deploy our VHP network through cloudformation. 
 
 1. Go to AWS website and navigate to cloudformation. (Make sure you are in the region you’d like to create your network in)
 
