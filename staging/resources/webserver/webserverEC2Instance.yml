@@ -6,6 +6,10 @@
       LaunchTemplate:
         LaunchTemplateId: !Ref webserverLaunchTemplate
         Version: !GetAtt webserverLaunchTemplate.DefaultVersionNumber
+      ImageId: !FindInMap
+        - amiMap
+        - !Ref 'AWS::Region'
+        - webserverAmiId
       Tags:
         - Key: environment
           Value: !Ref environment

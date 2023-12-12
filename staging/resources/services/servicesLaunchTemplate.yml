@@ -2,7 +2,7 @@
     Type: 'AWS::EC2::LaunchTemplate'
     DependsOn:
       - instanceProfile
-      - webserverSecurityGroup
+      - servicesSecurityGroup
     Properties:
       LaunchTemplateData:
         BlockDeviceMappings:
@@ -22,15 +22,16 @@
 #        ImageId: !FindInMap
 #          - amiMap
 #          - !Ref 'AWS::Region'
-#          - webserverAmiId
-        #ImageId: ami-057ccb05d2acc8c3d
+#          - servicesAmiId
+        #ImageId: ami-0d14968c49ced30f4
         InstanceType: !Ref instanceType
         NetworkInterfaces:
         - DeviceIndex: 0
-          PrivateIpAddress: 10.0.1.212
-          SubnetId: !Ref publicSubnet
-          Groups: 
-            - !Ref webserverSecurityGroup
+          PrivateIpAddress: 10.0.2.157
+          SubnetId: !Ref privateSubnet
+          Groups:
+            - !Ref servicesSecurityGroup
+          AssociatePublicIpAddress: false
         MetadataOptions:
           HttpTokens: required
         Monitoring:
@@ -39,7 +40,7 @@
           - ResourceType: instance
             Tags:
               - Key: Name
-                Value: !Sub '${environment}-vhp-webserver'
+                Value: !Sub '${environment}-vhp-services'
               - Key: environment
                 Value: !Ref environment
       TagSpecifications:

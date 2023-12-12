@@ -2,7 +2,7 @@
     Type: 'AWS::EC2::LaunchTemplate'
     DependsOn:
       - instanceProfile
-      - webserverSecurityGroup
+      - martSecurityGroup
     Properties:
       LaunchTemplateData:
         BlockDeviceMappings:
@@ -22,15 +22,16 @@
 #        ImageId: !FindInMap
 #          - amiMap
 #          - !Ref 'AWS::Region'
-#          - webserverAmiId
-        #ImageId: ami-057ccb05d2acc8c3d
+#          - martAmiId
+        #ImageId: ami-051f438fa2e21daba
         InstanceType: !Ref instanceType
         NetworkInterfaces:
         - DeviceIndex: 0
-          PrivateIpAddress: 10.0.1.212
-          SubnetId: !Ref publicSubnet
-          Groups: 
-            - !Ref webserverSecurityGroup
+          PrivateIpAddress: 10.0.2.116
+          SubnetId: !Ref privateSubnet
+          Groups:
+            - !Ref martSecurityGroup
+          AssociatePublicIpAddress: false
         MetadataOptions:
           HttpTokens: required
         Monitoring:
@@ -39,7 +40,7 @@
           - ResourceType: instance
             Tags:
               - Key: Name
-                Value: !Sub '${environment}-vhp-webserver'
+                Value: !Sub '${environment}-vhp-mart'
               - Key: environment
                 Value: !Ref environment
       TagSpecifications:

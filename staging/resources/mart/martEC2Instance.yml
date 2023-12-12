@@ -6,6 +6,10 @@
       LaunchTemplate:
         LaunchTemplateId: !Ref martLaunchTemplate
         Version: !GetAtt martLaunchTemplate.DefaultVersionNumber
+      ImageId: !FindInMap
+        - amiMap
+        - !Ref 'AWS::Region'
+        - martAmiId
       Tags:
         - Key: environment
           Value: !Ref environment

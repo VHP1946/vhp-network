@@ -6,6 +6,10 @@
       LaunchTemplate:
         LaunchTemplateId: !Ref coreLaunchTemplate
         Version: !GetAtt coreLaunchTemplate.DefaultVersionNumber
+      ImageId: !FindInMap
+        - amiMap
+        - !Ref 'AWS::Region'
+        - coreAmiId
       Tags:
         - Key: environment
           Value: !Ref environment
