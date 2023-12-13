@@ -6,10 +6,10 @@
       GroupDescription: allows ssh from vogel network
       GroupName: vhp-core-sg 
       SecurityGroupIngress:
-#        - IpProtocol: tcp
-#          FromPort: 5000
-#          ToPort: 5000
-#          SourceSecurityGroupId: !GetAtt ppSecurityGroup.GroupId
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !GetAtt webserverSecurityGroup.GroupId
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
@@ -20,18 +20,18 @@
           SourceSecurityGroupId: !GetAtt bastionHostSecurityGroup.GroupId
       SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 7050
-          ToPort: 7050
+          FromPort: 9000
+          ToPort: 9000
           CidrIp: 0.0.0.0/0
           Description: change source to services sg
         - IpProtocol: tcp
-          FromPort: 7000
-          ToPort: 7000
+          FromPort: 9001
+          ToPort: 9001
           CidrIp: 0.0.0.0/0
           Description: change source to services sg
         - IpProtocol: tcp
-          FromPort: 8080
-          ToPort: 8080
+          FromPort: 80
+          ToPort: 80
           CidrIp: 0.0.0.0/0
           Description: change source to mart sg
       VpcId: !Ref vhpVPC

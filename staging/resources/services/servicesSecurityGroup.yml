@@ -15,12 +15,12 @@
           ToPort: 6000
           SourceSecurityGroupId: !GetAtt bastionHostSecurityGroup.GroupId
         - IpProtocol: tcp
-          FromPort: 7050
-          ToPort: 7050
+          FromPort: 9000
+          ToPort: 9000
           SourceSecurityGroupId: !GetAtt coreSecurityGroup.GroupId
         - IpProtocol: tcp
-          FromPort: 7000
-          ToPort: 7000
+          FromPort: 9001
+          ToPort: 9001
           SourceSecurityGroupId: !GetAtt coreSecurityGroup.GroupId
         - IpProtocol: tcp
           FromPort: 443
